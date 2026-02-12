@@ -6,6 +6,61 @@ export type AIProvider = 'openai' | 'qwen' | 'wenxin' | 'doubao' | 'glm' | 'cust
 
 export type TemplateId = 'simple' | 'business' | 'lively' | 'academic' | 'magazine';
 
+// Template source type
+export type TemplateSource = 'builtin' | 'custom';
+
+// Template ID type that includes custom IDs
+export type AnyTemplateId = TemplateId | `custom_${number}`;
+
+// Layout component preferences for templates
+export interface TemplateLayoutConfig {
+  cardStyle?: 'default' | 'primary' | 'gradient' | 'shadow' | 'bordered' | 'glass';
+  infoBoxTypes?: string[];
+  highlightAreas?: string[];
+  dividerStyles?: string[];
+  decorativeElements?: boolean;
+}
+
+/**
+ * Custom template configuration
+ */
+export interface CustomTemplateConfig {
+  id: string;                    // Format: custom_<timestamp>
+  name: string;
+  description: string;
+  icon: string;
+
+  // Fully configurable content
+  systemPrompt: string;            // AI system prompt
+  layoutPrompt: string;            // Layout guidance prompt
+  exampleOutput: string;           // Example output
+  features: string[];              // Feature tags
+
+  // Optional configuration
+  aiConfig?: Partial<AIConfig>;     // AI parameter override
+  layoutPreferences?: TemplateLayoutConfig;  // Layout component preferences
+
+  // Metadata
+  source: TemplateSource;
+  createdAt: number;
+  updatedAt: number;
+  version: number;
+}
+
+/**
+ * Template version entry for version history
+ */
+export interface TemplateVersion {
+  id: string;
+  templateId: string;
+  config: CustomTemplateConfig;
+  createdAt: number;
+  changeDescription?: string;
+}
+
+// Union type for both builtin and custom templates
+export type AnyTemplateConfig = TemplateConfig | CustomTemplateConfig;
+
 export interface AIConfig {
   enabled: boolean;
   provider: AIProvider;
@@ -31,13 +86,13 @@ export interface OptimizedVersion {
   articleId: string;
   originalContent: string;
   optimizedContent: string;
-  templateId: TemplateId;
+  templateId: AnyTemplateId;
   createdAt: number;
 }
 
 export interface OptimizationRequest {
   content: string;
-  templateId: TemplateId;
+  templateId: AnyTemplateId;
   config: AIConfig;
 }
 

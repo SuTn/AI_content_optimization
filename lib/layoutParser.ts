@@ -217,11 +217,13 @@ function generateDividerHtmlFromConfig(config: { style: DividerStyle; text?: str
     .join('; ');
 
   if (config.text) {
-    return `<div style="display: flex; align-items: center; margin: 24px 0;">
-      <div style="flex: 1; ${styleAttr}"></div>
-      <span style="padding: 0 16px; color: #666; font-size: 14px;">${config.text}</span>
-      <div style="flex: 1; ${styleAttr}"></div>
-    </div>`;
+    return `<table style="width: 100%; margin: 24px 0; border-collapse: collapse;">
+      <tr>
+        <td style="${styleAttr}"></td>
+        <td style="padding: 0 16px; color: #666; font-size: 14px; white-space: nowrap;">${config.text}</td>
+        <td style="${styleAttr}"></td>
+      </tr>
+    </table>`;
   }
 
   return `<div style="${styleAttr}; margin: 24px 0;"></div>`;
@@ -290,7 +292,7 @@ function generateCardHtml(component: ParsedLayoutComponent, primaryColor: string
   // Render component content through markdown
   const renderedContent = markdownToHtmlLocal(component.content);
 
-  return `<div style="${styleAttr}">${titleHtml}${renderedContent}</div>`;
+  return `<div data-wechat-layout="true" style="${styleAttr}">${titleHtml}${renderedContent}</div>`;
 }
 
 /**
@@ -316,7 +318,7 @@ function generateInfoBoxHtml(component: ParsedLayoutComponent, primaryColor: str
   // Render component content through markdown
   const renderedContent = markdownToHtmlLocal(component.content);
 
-  return `<div style="${containerStyle}">${titleHtml}${renderedContent}</div>`;
+  return `<div data-wechat-layout="true" style="${containerStyle}">${titleHtml}${renderedContent}</div>`;
 }
 
 /**
@@ -330,7 +332,7 @@ function generateHighlightHtml(component: ParsedLayoutComponent, primaryColor: s
     case 'callout':
       // Render component content through markdown
       const renderedCalloutContent = markdownToHtmlLocal(component.content);
-      return `<div style="border: 2px solid ${primaryColor}; background: ${addAlpha(primaryColor, 0.05)}; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      return `<div data-wechat-layout="true" style="border: 2px solid ${primaryColor}; background: ${lightenColor(primaryColor, 0.95)}; border-radius: 8px; padding: 20px; margin: 20px 0;">
         ${title ? `<div style="font-size: 18px; font-weight: bold; color: ${primaryColor}; margin-bottom: 12px;">${title}</div>` : ''}
         ${renderedCalloutContent}
       </div>`;
@@ -341,20 +343,22 @@ function generateHighlightHtml(component: ParsedLayoutComponent, primaryColor: s
       const listItems = items.map((item) => {
         // Only process lines starting with - or * as list items
         if (!/^[-*]\s*/.test(item)) {
-          // Non-list item, render as paragraph with left padding
+          // Non-list item, render as full-width row
           const renderedItem = markdownToHtmlLocal(item);
-          return `<div style="margin: 12px 0; padding-left: 40px;">${renderedItem}</div>`;
+          return `<tr><td colspan="2" style="padding: 4px 0;">${renderedItem}</td></tr>`;
         }
         listNumber++; // Only increment for actual list items
         const cleanItem = item.replace(/^[-*]\s*/, '');
         // Render each list item's markdown
         const renderedItem = markdownToHtmlLocal(cleanItem);
-        return `<div style="margin: 12px 0;">
-          <span style="display: inline-block; width: 28px; height: 28px; line-height: 28px; text-align: center; background: ${primaryColor}; color: #fff; border-radius: 50%; margin-right: 12px; font-weight: bold; font-size: 14px;">${listNumber}</span>
-          <span style="display: inline-block; vertical-align: top; width: calc(100% - 40px); margin-top: 4px;">${renderedItem}</span>
-        </div>`;
+        return `<tr>
+          <td style="padding: 4px 8px 4px 0; vertical-align: top;">
+            <span style="display: inline-block; width: 28px; height: 28px; line-height: 28px; text-align: center; background: ${primaryColor}; color: #fff; border-radius: 50%; font-weight: bold; font-size: 14px;">${listNumber}</span>
+          </td>
+          <td style="padding: 4px 0;">${renderedItem}</td>
+        </tr>`;
       }).join('');
-      return `<div style="padding: 16px 0;">${listItems}</div>`;
+      return `<table data-wechat-layout="true" style="width: 100%; margin: 12px 0; border-collapse: collapse;">${listItems}</table>`;
     }
 
     case 'process': {
@@ -365,12 +369,12 @@ function generateHighlightHtml(component: ParsedLayoutComponent, primaryColor: s
         const renderedItem = markdownToHtmlLocal(cleanItem);
         const arrow = index < items.length - 1 ?
           `<div style="text-align: center; color: ${primaryColor}; font-size: 20px; margin: 4px 0;">↓</div>` : '';
-        return `<div style="border: 1px solid ${primaryColor}; background: ${addAlpha(primaryColor, 0.05)}; border-radius: 8px; padding: 16px; margin: 8px 0; text-align: center;">
+        return `<div style="border: 1px solid ${primaryColor}; background: ${lightenColor(primaryColor, 0.95)}; border-radius: 8px; padding: 16px; margin: 8px 0; text-align: center;">
           <span style="display: inline-block; min-width: 24px; height: 24px; line-height: 24px; background: ${primaryColor}; color: #fff; border-radius: 4px; padding: 0 8px; margin-right: 8px; font-size: 14px; font-weight: bold;">${index + 1}</span>
           <span style="font-size: 15px;">${renderedItem}</span>
         </div>${arrow}`;
       }).join('');
-      return `<div style="padding: 8px 0;">${steps}</div>`;
+      return `<div data-wechat-layout="true" style="padding: 8px 0;">${steps}</div>`;
     }
 
     case 'timeline': {
@@ -379,13 +383,19 @@ function generateHighlightHtml(component: ParsedLayoutComponent, primaryColor: s
         const cleanItem = item.replace(/^[-*]\s*/, '');
         // Render each timeline item's markdown
         const renderedItem = markdownToHtmlLocal(cleanItem);
-        return `<div style="position: relative; margin: 16px 0; padding-left: 28px;">
-          ${index < items.length - 1 ? `<div style="position: absolute; left: 5px; top: 12px; bottom: -16px; width: 2px; background: #e8e8e8;"></div>` : ''}
-          <span style="display: inline-block; width: 12px; height: 12px; background: ${primaryColor}; border-radius: 50%; margin-right: 16px; margin-left: ${index === 0 ? '0' : '6px'}; vertical-align: top;"></span>
-          <div style="display: inline-block; vertical-align: top; width: calc(100% - 28px);">${renderedItem}</div>
-        </div>`;
+        // Use table layout instead of inline-block for WeChat compatibility
+        return `<table style="width: 100%; margin: 16px 0; border-collapse: collapse;">
+          <tr>
+            <td style="width: 32px; padding: 0; vertical-align: top; text-align: center;">
+              <span style="display: inline-block; width: 12px; height: 12px; background: ${primaryColor}; border-radius: 50%;"></span>
+            </td>
+            <td style="padding: 0 0 0 8px; vertical-align: top;">
+              <div style="border-left: 2px solid #e8e8e8; padding-left: 12px; margin-left: -4px;">${renderedItem}</div>
+            </td>
+          </tr>
+        </table>`;
       }).join('');
-      return `<div style="padding: 8px 0;">${timelineItems}</div>`;
+      return `<div data-wechat-layout="true" style="padding: 8px 0;">${timelineItems}</div>`;
     }
 
     case 'comparison': {
@@ -403,7 +413,7 @@ function generateHighlightHtml(component: ParsedLayoutComponent, primaryColor: s
         }).join('');
         return `<tr>${cells}</tr>`;
       }).join('');
-      return `<table style="width: 100%; border-collapse: collapse; margin: 16px 0;">${rows}</table>`;
+      return `<table data-wechat-layout="true" style="width: 100%; border-collapse: collapse; margin: 16px 0;">${rows}</table>`;
     }
 
     default:
@@ -423,14 +433,17 @@ function generateDividerHtml(component: ParsedLayoutComponent, primaryColor: str
     .join('; ');
 
   if (text) {
-    return `<div style="display: flex; align-items: center; margin: 24px 0;">
-      <div style="flex: 1; ${styleAttr}"></div>
-      <span style="padding: 0 16px; color: #666; font-size: 14px;">${text}</span>
-      <div style="flex: 1; ${styleAttr}"></div>
-    </div>`;
+    // WeChat doesn't support flex, use table instead
+    return `<table data-wechat-layout="true" style="width: 100%; margin: 24px 0; border-collapse: collapse;">
+      <tr>
+        <td style="${styleAttr}"></td>
+        <td style="padding: 0 16px; color: #666; font-size: 14px; white-space: nowrap;">${text}</td>
+        <td style="${styleAttr}"></td>
+      </tr>
+    </table>`;
   }
 
-  return `<div style="${styleAttr}; margin: 24px 0;"></div>`;
+  return `<div data-wechat-layout="true" style="${styleAttr}; margin: 24px 0;"></div>`;
 }
 
 /**
@@ -438,7 +451,7 @@ function generateDividerHtml(component: ParsedLayoutComponent, primaryColor: str
  */
 function generateSpacerHtml(component: ParsedLayoutComponent): string {
   const { height = '20' } = component.params;
-  return `<div style="height: ${height}px; overflow: hidden;"></div>`;
+  return `<div data-wechat-layout="true" style="height: ${height}px;"></div>`;
 }
 
 /**
@@ -453,7 +466,7 @@ function generateBadgeHtml(component: ParsedLayoutComponent, primaryColor: strin
     .map(([k, v]) => `${camelToKebab(k)}: ${v}`)
     .join('; ');
 
-  return `<span style="${styleAttr}">${text || component.content}</span>`;
+  return `<span data-wechat-layout="true" style="${styleAttr}">${text || component.content}</span>`;
 }
 
 /**
@@ -473,7 +486,7 @@ function generateButtonHtml(component: ParsedLayoutComponent, primaryColor: stri
   const href = url ? `href="${url}"` : '';
   const tag = url ? 'a' : 'div';
 
-  return `<${tag} ${href} style="${styleAttr}">${renderedText}</${tag}>`;
+  return `<${tag} data-wechat-layout="true" ${href} style="${styleAttr}">${renderedText}</${tag}>`;
 }
 
 /**
@@ -484,8 +497,9 @@ function generateProgressHtml(component: ParsedLayoutComponent, primaryColor: st
   const barColor = color || primaryColor;
   const barHeight = parseInt(height, 10);
 
-  return `<div style="width: 100%; height: ${barHeight}px; background: #f0f0f0; border-radius: ${barHeight / 2}px; overflow: hidden; margin: 12px 0;">
-    <div style="height: 100%; width: ${Math.min(100, Math.max(0, parseInt(percent, 10)))}%; background: ${barColor}; border-radius: ${barHeight / 2}px; transition: width 0.3s ease;"></div>
+  // WeChat doesn't support overflow:hidden or transition, removed both
+  return `<div data-wechat-layout="true" style="width: 100%; height: ${barHeight}px; background: #f0f0f0; border-radius: ${barHeight / 2}px; margin: 12px 0;">
+    <div style="height: 100%; width: ${Math.min(100, Math.max(0, parseInt(percent, 10)))}%; background: ${barColor}; border-radius: ${barHeight / 2}px;"></div>
   </div>`;
 }
 
@@ -508,22 +522,36 @@ function camelToKebab(str: string): string {
 }
 
 /**
- * Adjust color opacity
+ * Adjust color opacity (WeChat doesn't support rgba)
+ * Use lightenColor for light backgrounds instead
  */
-function addAlpha(color: string, opacity: number): string {
+function lightenColor(color: string, amount: number = 0.9): string {
+  // For WeChat compatibility, return a very light hex color
+  // This blends with white for lighter version
   if (color.startsWith('#')) {
     const hex = color.slice(1);
     if (hex.length === 6) {
+      // Mix with white for lighter version
       const r = parseInt(hex.slice(0, 2), 16);
       const g = parseInt(hex.slice(2, 4), 16);
       const b = parseInt(hex.slice(4, 6), 16);
-      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+
+      const newR = Math.round(r + (255 - r) * amount);
+      const newG = Math.round(g + (255 - g) * amount);
+      const newB = Math.round(b + (255 - b) * amount);
+
+      return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
     }
   }
-  if (color.startsWith('rgb')) {
-    return color.replace(')', `, ${opacity})`).replace('rgb', 'rgba');
-  }
   return color;
+}
+
+/**
+ * Adjust color opacity (deprecated - kept for backward compatibility)
+ * WeChat doesn't support rgba, use lightenColor instead
+ */
+function addAlpha(color: string, opacity: number): string {
+  return lightenColor(color, 1 - opacity);
 }
 
 /**
@@ -551,13 +579,14 @@ function getCardStyles(variant: CardVariant, primaryColor: string): Record<strin
     gradient: {
       ...baseStyle,
       border: 'none',
-      background: `linear-gradient(135deg, ${addAlpha(primaryColor, 0.15)} 0%, ${addAlpha(primaryColor, 0.05)} 100%)`,
+      // WeChat doesn't support linear-gradient, use light solid color
+      backgroundColor: lightenColor(primaryColor, 0.95),
     },
     shadow: {
       ...baseStyle,
-      border: '1px solid #e8e8e8',
+      // WeChat doesn't support box-shadow, use stronger border
+      border: '2px solid #e8e8e8',
       backgroundColor: '#ffffff',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
     },
     bordered: {
       ...baseStyle,
@@ -566,10 +595,9 @@ function getCardStyles(variant: CardVariant, primaryColor: string): Record<strin
     },
     glass: {
       ...baseStyle,
-      border: '1px solid rgba(255, 255, 255, 0.3)',
-      background: 'rgba(255, 255, 255, 0.7)',
-      backdropFilter: 'blur(10px)',
-      WebkitBackdropFilter: 'blur(10px)',
+      // WeChat doesn't support rgba, use solid colors
+      border: '1px solid #d4d4d4',
+      backgroundColor: '#ffffff',
     },
   };
 
@@ -585,7 +613,7 @@ function getInfoBoxStyles(type: InfoBoxType, primaryColor: string): {
   icon: string;
 } {
   const configs: Record<InfoBoxType, { color: string; bg: string; icon: string }> = {
-    tip: { color: primaryColor, bg: addAlpha(primaryColor, 0.08), icon: '💡' },
+    tip: { color: primaryColor, bg: lightenColor(primaryColor, 0.92), icon: '💡' },
     warning: { color: '#fa8c16', bg: '#fff7e6', icon: '⚠️' },
     success: { color: '#52c41a', bg: '#f6ffed', icon: '✓' },
     error: { color: '#ff4d4f', bg: '#fff1f0', icon: '✕' },
@@ -626,7 +654,8 @@ function getDividerStyles(style: DividerStyle, primaryColor: string, customColor
     case 'dotted':
       return { ...baseStyle, borderTop: `1px dotted ${color}`, backgroundColor: 'transparent' };
     case 'gradient':
-      return { ...baseStyle, background: `linear-gradient(90deg, transparent 0%, ${color} 50%, transparent 100%)`, height: '2px' };
+      // WeChat doesn't support linear-gradient, use solid color
+      return { ...baseStyle, backgroundColor: color, height: '2px' };
     default:
       return baseStyle;
   }
@@ -650,7 +679,8 @@ function getBadgeStyles(variant: string, color: string): Record<string, string> 
     case 'outlined':
       return { ...baseStyle, border: `1px solid ${color}`, color: color, backgroundColor: 'transparent' };
     case 'soft':
-      return { ...baseStyle, backgroundColor: addAlpha(color, 0.1), color: color };
+      // WeChat doesn't support rgba, use lightenColor
+      return { ...baseStyle, backgroundColor: lightenColor(color, 0.9), color: color };
     default:
       return baseStyle;
   }

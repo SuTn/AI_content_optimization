@@ -3,7 +3,8 @@
  * Provides template-specific guidance for AI to generate structured content with layout components
  */
 
-import type { TemplateId } from '@/types/layout';
+import type { TemplateId, AnyTemplateId } from '@/types/ai';
+import { getTemplateById } from '@/lib/templateStorage';
 
 /**
  * Base layout syntax documentation for AI
@@ -130,8 +131,23 @@ const LAYOUT_SYNTAX_DOCS = `# 可用布局组件语法
 /**
  * Get comprehensive AI prompt for layout generation
  */
-export function getLayoutPrompt(templateId: TemplateId, userContent?: string): string {
-  const templatePrompt = getTemplateLayoutPrompt(templateId);
+export function getLayoutPrompt(templateId: AnyTemplateId, userContent?: string): string {
+  // Check if it's a custom template
+  const customTemplate = getTemplateById(templateId);
+  const isCustom = customTemplate && 'source' in customTemplate;
+
+  let templatePrompt: string;
+  let styleName = '';
+
+  if (isCustom) {
+    // Use custom template's layout prompt if available, otherwise fall back to system prompt
+    templatePrompt = customTemplate.layoutPrompt || customTemplate.systemPrompt || '';
+    styleName = customTemplate.name;
+  } else {
+    templatePrompt = getTemplateLayoutPrompt(templateId as TemplateId);
+    styleName = templateId === 'simple' ? '简约' : templateId === 'business' ? '商务' : templateId === 'lively' ? '活泼' : templateId === 'academic' ? '学术' : '杂志';
+  }
+
   const basePrompt = `${LAYOUT_SYNTAX_DOCS}
 
 ${templatePrompt}
@@ -155,7 +171,7 @@ ${templatePrompt}
 ${userContent}
 
 # 要求
-请根据以上内容和${templateId === 'simple' ? '简约' : templateId === 'business' ? '商务' : templateId === 'lively' ? '活泼' : templateId === 'academic' ? '学术' : '杂志'}风格要求，使用合适的布局组件重新组织和呈现内容。
+请根据以上内容和${styleName}风格要求，使用合适的布局组件重新组织和呈现内容。
 `;
   }
 
@@ -497,7 +513,7 @@ function getTemplateLayoutPrompt(templateId: TemplateId): string {
  * Get layout optimization prompt for AI
  */
 export function getLayoutOptimizationPrompt(
-  templateId: TemplateId,
+  templateId: AnyTemplateId,
   content: string
 ): string {
   return `# 布局优化任务

@@ -54,33 +54,45 @@ function camelToKebab(str: string): string {
 }
 
 /**
- * Adjust color opacity (add alpha channel)
+ * Adjust color opacity (WeChat doesn't support rgba)
+ * Use lightenColor for light backgrounds instead
  */
-function addAlpha(color: string, opacity: number): string {
-  // Handle hex colors
+function lightenColor(color: string, amount: number = 0.9): string {
+  // For WeChat compatibility, return a very light hex color
+  // This blends with white for lighter version
   if (color.startsWith('#')) {
     const hex = color.slice(1);
     if (hex.length === 6) {
+      // Mix with white for lighter version
       const r = parseInt(hex.slice(0, 2), 16);
       const g = parseInt(hex.slice(2, 4), 16);
       const b = parseInt(hex.slice(4, 6), 16);
-      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+
+      const newR = Math.round(r + (255 - r) * amount);
+      const newG = Math.round(g + (255 - g) * amount);
+      const newB = Math.round(b + (255 - b) * amount);
+
+      return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
     }
-  }
-  // Handle rgb/rgba colors
-  if (color.startsWith('rgb')) {
-    return color.replace(')', `, ${opacity})`).replace('rgb', 'rgba');
   }
   return color;
 }
 
 /**
- * Generate gradient CSS
+ * Adjust color opacity (deprecated - kept for backward compatibility)
+ * WeChat doesn't support rgba, use lightenColor instead
+ */
+function addAlpha(color: string, opacity: number): string {
+  return lightenColor(color, 1 - opacity);
+}
+
+/**
+ * Generate gradient CSS (WeChat doesn't support linear-gradient)
+ * Returns a solid light color instead
  */
 function generateGradient(color: string, direction: number = 135): string {
-  const color1 = addAlpha(color, 0.15);
-  const color2 = addAlpha(color, 0.05);
-  return `linear-gradient(${direction}deg, ${color1} 0%, ${color2} 100%)`;
+  // WeChat doesn't support linear-gradient, return solid light color
+  return lightenColor(color, 0.95);
 }
 
 // ============================================================================
@@ -100,7 +112,7 @@ export function generateCard(content: string, config: CardConfig, primaryColor: 
   // Render content markdown to HTML
   const renderedContent = markdownToHtmlLocal(content);
 
-  return `<div style="${styleAttr}">${titleHtml}${renderedContent}</div>`;
+  return `<div data-wechat-layout="true" style="${styleAttr}">${titleHtml}${renderedContent}</div>`;
 }
 
 /**
@@ -128,13 +140,14 @@ function getCardStyles(variant: CardVariant, primaryColor: string): Record<strin
     gradient: {
       ...baseStyle,
       border: 'none',
-      background: generateGradient(primaryColor),
+      // WeChat doesn't support linear-gradient, use solid light color
+      backgroundColor: generateGradient(primaryColor),
     },
     shadow: {
       ...baseStyle,
-      border: '1px solid #e8e8e8',
+      // WeChat doesn't support box-shadow, use stronger border instead
+      border: '2px solid #e8e8e8',
       backgroundColor: '#ffffff',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
     },
     bordered: {
       ...baseStyle,
@@ -143,10 +156,9 @@ function getCardStyles(variant: CardVariant, primaryColor: string): Record<strin
     },
     glass: {
       ...baseStyle,
-      border: '1px solid rgba(255, 255, 255, 0.3)',
-      background: `rgba(255, 255, 255, 0.7)`,
-      backdropFilter: 'blur(10px)',
-      WebkitBackdropFilter: 'blur(10px)',
+      // WeChat doesn't support rgba, use solid colors
+      border: '1px solid #d4d4d4',
+      backgroundColor: '#ffffff',
     },
   };
 
@@ -218,7 +230,7 @@ export function generateInfoBox(content: string, config: InfoBoxConfig, primaryC
   // Render content markdown to HTML
   const renderedContent = markdownToHtmlLocal(content);
 
-  return `<div style="${containerStyle}">${titleHtml}${contentPrefix}${renderedContent}</div>`;
+  return `<div data-wechat-layout="true" style="${containerStyle}">${titleHtml}${contentPrefix}${renderedContent}</div>`;
 }
 
 /**
@@ -230,7 +242,7 @@ function getInfoBoxStyles(type: InfoBoxType, primaryColor: string): {
   icon: string;
 } {
   const configs: Record<InfoBoxType, { color: string; bg: string; icon: string }> = {
-    tip: { color: primaryColor, bg: addAlpha(primaryColor, 0.08), icon: '💡' },
+    tip: { color: primaryColor, bg: lightenColor(primaryColor, 0.92), icon: '💡' },
     warning: { color: '#fa8c16', bg: '#fff7e6', icon: '⚠️' },
     success: { color: '#52c41a', bg: '#f6ffed', icon: '✓' },
     error: { color: '#ff4d4f', bg: '#fff1f0', icon: '✕' },
@@ -283,7 +295,8 @@ export function generateHighlight(content: string, config: HighlightConfig, prim
 function generateCallout(content: string, config: HighlightConfig, primaryColor: string): string {
   const styles = {
     border: `2px solid ${primaryColor}`,
-    backgroundColor: addAlpha(primaryColor, 0.05),
+    // WeChat doesn't support rgba, use lightenColor
+    backgroundColor: lightenColor(primaryColor, 0.95),
     borderRadius: '8px',
     padding: '20px',
     margin: '20px 0',
@@ -297,7 +310,7 @@ function generateCallout(content: string, config: HighlightConfig, primaryColor:
   // Render content markdown to HTML
   const renderedContent = markdownToHtmlLocal(content);
 
-  return `<div style="${styleToString(styles)}">${titleHtml}${renderedContent}</div>`;
+  return `<div data-wechat-layout="true" style="${styleToString(styles)}">${titleHtml}${renderedContent}</div>`;
 }
 
 /**
@@ -307,6 +320,10 @@ function generateNumberedList(content: string, config: HighlightConfig, primaryC
   const items = content.split('\n').filter(line => line.trim());
 
   const listItems = items.map((item, index) => {
+    const cleanItem = item.replace(/^[-*]\s*/, '');
+    // Render each list item's markdown
+    const renderedItem = markdownToHtmlLocal(cleanItem);
+
     const numStyles = {
       display: 'inline-block',
       width: '28px',
@@ -316,33 +333,21 @@ function generateNumberedList(content: string, config: HighlightConfig, primaryC
       backgroundColor: primaryColor,
       color: '#fff',
       borderRadius: '50%',
-      marginRight: '12px',
       fontWeight: 'bold',
       fontSize: '14px',
     };
 
-    const itemStyles = {
-      display: 'inline-block',
-      verticalAlign: 'top',
-      width: 'calc(100% - 40px)',
-      marginTop: '4px',
-    };
-
-    const cleanItem = item.replace(/^[-*]\s*/, '');
-    // Render each list item's markdown
-    const renderedItem = markdownToHtmlLocal(cleanItem);
-
-    return `<div style="margin: 12px 0;">
-      <span style="${styleToString(numStyles)}">${index + 1}</span>
-      <span style="${styleToString(itemStyles)}">${renderedItem}</span>
-    </div>`;
+    return `<tr>
+      <td style="padding: 4px 8px 4px 0; vertical-align: top;">
+        <span style="${styleToString(numStyles)}">${index + 1}</span>
+      </td>
+      <td style="padding: 4px 0;">${renderedItem}</td>
+    </tr>`;
   }).join('');
 
-  const containerStyles = {
-    padding: '16px 0',
-  };
+  const tableStyle = 'width: 100%; margin: 12px 0; border-collapse: collapse;';
 
-  return `<div style="${styleToString(containerStyles)}">${listItems}</div>`;
+  return `<table data-wechat-layout="true" style="${tableStyle}">${listItems}</table>`;
 }
 
 /**
@@ -352,43 +357,31 @@ function generateTimeline(content: string, config: HighlightConfig, primaryColor
   const items = content.split('\n').filter(line => line.trim());
 
   const timelineItems = items.map((item, index) => {
+    const cleanItem = item.replace(/^[-*]\s*/, '');
+    // Render each timeline item's markdown
+    const renderedItem = markdownToHtmlLocal(cleanItem);
+
     const dotStyles = {
       display: 'inline-block',
       width: '12px',
       height: '12px',
       backgroundColor: primaryColor,
       borderRadius: '50%',
-      marginRight: '16px',
-      marginLeft: index === 0 ? '0' : '6px',
     };
 
-    const lineStyles = {
-      position: 'absolute',
-      left: '5px',
-      top: '12px',
-      bottom: '-16px',
-      width: '2px',
-      backgroundColor: '#e8e8e8',
-    };
-
-    const contentStyles = {
-      display: 'inline-block',
-      verticalAlign: 'top',
-      width: 'calc(100% - 28px)',
-    };
-
-    const cleanItem = item.replace(/^[-*]\s*/, '');
-    // Render each timeline item's markdown
-    const renderedItem = markdownToHtmlLocal(cleanItem);
-
-    return `<div style="position: relative; margin: 16px 0; padding-left: 28px;">
-      ${index < items.length - 1 ? `<div style="${styleToString(lineStyles)}"></div>` : ''}
-      <span style="${styleToString(dotStyles)}"></span>
-      <div style="${styleToString(contentStyles)}">${renderedItem}</div>
-    </div>`;
+    return `<table style="width: 100%; margin: 16px 0; border-collapse: collapse;">
+      <tr>
+        <td style="width: 32px; padding: 0; vertical-align: top; text-align: center;">
+          <span style="${styleToString(dotStyles)}"></span>
+        </td>
+        <td style="padding: 0 0 0 8px; vertical-align: top;">
+          <div style="border-left: 2px solid #e8e8e8; padding-left: 12px; margin-left: -4px;">${renderedItem}</div>
+        </td>
+      </tr>
+    </table>`;
   }).join('');
 
-  return `<div style="padding: 8px 0;">${timelineItems}</div>`;
+  return `<div data-wechat-layout="true" style="padding: 8px 0;">${timelineItems}</div>`;
 }
 
 /**
@@ -400,7 +393,8 @@ function generateProcess(content: string, config: HighlightConfig, primaryColor:
   const steps = items.map((item, index) => {
     const stepBoxStyles = {
       border: `1px solid ${primaryColor}`,
-      backgroundColor: addAlpha(primaryColor, 0.05),
+      // WeChat doesn't support rgba, use lightenColor
+      backgroundColor: lightenColor(primaryColor, 0.95),
       borderRadius: '8px',
       padding: '16px',
       margin: '8px 0',
@@ -434,7 +428,7 @@ function generateProcess(content: string, config: HighlightConfig, primaryColor:
     </div>${arrowHtml}`;
   }).join('');
 
-  return `<div style="padding: 8px 0;">${steps}</div>`;
+  return `<div data-wechat-layout="true" style="padding: 8px 0;">${steps}</div>`;
 }
 
 /**
@@ -462,7 +456,7 @@ function generateComparison(content: string, config: HighlightConfig, primaryCol
 
   const tableStyle = 'width: 100%; border-collapse: collapse; margin: 16px 0;';
 
-  return `<table style="${tableStyle}">${rows}</table>`;
+  return `<table data-wechat-layout="true" style="${tableStyle}">${rows}</table>`;
 }
 
 // ============================================================================
@@ -476,14 +470,16 @@ export function generateDivider(config: DividerConfig, primaryColor: string): st
   const styles = getDividerStyles(config.style, primaryColor, config.color);
 
   if (config.text) {
-    return `<div style="display: flex; align-items: center; margin: 24px 0;">
-      <div style="flex: 1; ${styleToString(styles)}"></div>
-      <span style="padding: 0 16px; color: #666; font-size: 14px;">${config.text}</span>
-      <div style="flex: 1; ${styleToString(styles)}"></div>
-    </div>`;
+    return `<table data-wechat-layout="true" style="width: 100%; margin: 24px 0; border-collapse: collapse;">
+      <tr>
+        <td style="${styleToString(styles)}"></td>
+        <td style="padding: 0 16px; color: #666; font-size: 14px; white-space: nowrap;">${config.text}</td>
+        <td style="${styleToString(styles)}"></td>
+      </tr>
+    </table>`;
   }
 
-  return `<div style="${styleToString({ ...styles, margin: '24px 0' })}"></div>`;
+  return `<div data-wechat-layout="true" style="${styleToString({ ...styles, margin: '24px 0' })}"></div>`;
 }
 
 /**
@@ -515,9 +511,10 @@ function getDividerStyles(style: DividerStyle, primaryColor: string, customColor
         backgroundColor: 'transparent',
       };
     case 'gradient':
+      // WeChat doesn't support linear-gradient, use solid color
       return {
         ...baseStyle,
-        background: `linear-gradient(90deg, transparent 0%, ${color} 50%, transparent 100%)`,
+        backgroundColor: color,
         height: '2px',
       };
     default:
@@ -533,7 +530,7 @@ function getDividerStyles(style: DividerStyle, primaryColor: string, customColor
  * Generate spacer HTML
  */
 export function generateSpacer(config: SpacerConfig): string {
-  return `<div style="height: ${config.height}px; overflow: hidden;"></div>`;
+  return `<div data-wechat-layout="true" style="height: ${config.height}px;"></div>`;
 }
 
 // ============================================================================
@@ -546,7 +543,7 @@ export function generateSpacer(config: SpacerConfig): string {
 export function generateBadge(config: BadgeConfig, primaryColor: string): string {
   const styles = getBadgeStyles(config.variant || 'soft', config.color || primaryColor);
 
-  return `<span style="${styleToString(styles)}">${config.text}</span>`;
+  return `<span data-wechat-layout="true" style="${styleToString(styles)}">${config.text}</span>`;
 }
 
 /**
@@ -576,9 +573,10 @@ function getBadgeStyles(variant: 'filled' | 'outlined' | 'soft', color: string):
         backgroundColor: 'transparent',
       };
     case 'soft':
+      // WeChat doesn't support rgba, use lightenColor
       return {
         ...baseStyle,
-        backgroundColor: addAlpha(color, 0.1),
+        backgroundColor: lightenColor(color, 0.9),
         color: color,
       };
     default:
@@ -598,7 +596,7 @@ export function generateButton(config: ButtonConfig, primaryColor: string): stri
   const href = config.url ? `href="${config.url}"` : '';
   const tag = config.url ? 'a' : 'div';
 
-  return `<${tag} ${href} style="${styleToString(styles)}">${config.text}</${tag}>`;
+  return `<${tag} data-wechat-layout="true" ${href} style="${styleToString(styles)}">${config.text}</${tag}>`;
 }
 
 /**
@@ -658,7 +656,7 @@ export function generateProgress(config: ProgressConfig, primaryColor: string): 
     height: `${height}px`,
     backgroundColor: '#f0f0f0',
     borderRadius: `${height / 2}px`,
-    overflow: 'hidden',
+    // WeChat doesn't support overflow:hidden
     margin: '12px 0',
   };
 
@@ -667,10 +665,10 @@ export function generateProgress(config: ProgressConfig, primaryColor: string): 
     width: `${Math.min(100, Math.max(0, config.percent))}%`,
     backgroundColor: color,
     borderRadius: `${height / 2}px`,
-    transition: 'width 0.3s ease',
+    // WeChat doesn't support transition, removed
   };
 
-  return `<div style="${styleToString(containerStyles)}">
+  return `<div data-wechat-layout="true" style="${styleToString(containerStyles)}">
     <div style="${styleToString(barStyles)}"></div>
   </div>`;
 }

@@ -1,5 +1,9 @@
 import { Article, Settings, StorageData, DEFAULT_SETTINGS, MAX_ARTICLES, STORAGE_KEY } from '@/types';
 
+// Template storage keys
+export const STORAGE_KEY_TEMPLATES = 'mopai_templates';
+export const STORAGE_KEY_TEMPLATE_VERSIONS_PREFIX = 'mopai_template_versions_';
+
 /**
  * Get all data from localStorage
  */

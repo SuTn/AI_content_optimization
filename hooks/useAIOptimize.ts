@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { AIConfig, TemplateId, OptimizedVersion } from '@/types/ai';
+import { AIConfig, TemplateId, OptimizedVersion, AnyTemplateId } from '@/types/ai';
 import { generateId } from '@/lib/utils';
 
 interface OptimizationState {
@@ -49,7 +49,7 @@ export function useAIOptimize({ articleId, onSave }: UseAIOptimizeOptions) {
   const saveToHistory = useCallback((
     originalContent: string,
     optimizedContent: string,
-    templateId: TemplateId
+    templateId: AnyTemplateId
   ) => {
     const version: OptimizedVersion = {
       id: generateId(),
@@ -88,7 +88,7 @@ export function useAIOptimize({ articleId, onSave }: UseAIOptimizeOptions) {
   // Start optimization
   const optimize = useCallback(async (
     content: string,
-    templateId: TemplateId,
+    templateId: AnyTemplateId,
     config: AIConfig
   ) => {
     console.log('[useAIOptimize] Starting optimization:', {

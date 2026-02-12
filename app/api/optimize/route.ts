@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AIConfig, TemplateId } from '@/types/ai';
+import { AIConfig, TemplateId, AnyTemplateId } from '@/types/ai';
 import { getLayoutOptimizationPrompt } from '@/lib/prompts/layoutPrompts';
 import { getTemplatePrimaryColor } from '@/lib/templateLayouts';
+import { getTemplateById } from '@/lib/templateStorage';
 
 export const runtime = 'edge';
 
 interface OptimizeRequest {
   content: string;
-  templateId: TemplateId;
+  templateId: AnyTemplateId;
   config: AIConfig;
   useChunking?: boolean;
   maxTokens?: number;
@@ -306,7 +307,16 @@ export async function PUT(req: NextRequest) {
 /**
  * Get system prompt based on template
  */
-function getSystemPrompt(templateId: TemplateId): string {
+function getSystemPrompt(templateId: AnyTemplateId): string {
+  // Check if it's a custom template
+  const template = getTemplateById(templateId);
+
+  if (template && 'source' in template) {
+    // Custom template - use its system prompt
+    return template.systemPrompt;
+  }
+
+  // Builtin template
   const prompts: Record<TemplateId, string> = {
     simple: '你是一个专业的公众号排版优化助手，擅长将内容优化为简约清晰风格。',
     business: '你是一个专业的公众号排版优化助手，擅长将内容优化为商务专业风格。',
@@ -314,13 +324,13 @@ function getSystemPrompt(templateId: TemplateId): string {
     academic: '你是一个专业的公众号排版优化助手，擅长将内容优化为学术严谨风格。',
     magazine: '你是一个专业的公众号排版优化助手，擅长将内容优化为杂志精美风格。',
   };
-  return prompts[templateId] || prompts.simple;
+  return prompts[templateId as TemplateId] || prompts.simple;
 }
 
 /**
  * Get optimization prompt based on template
  */
-function getOptimizePrompt(templateId: TemplateId, content: string): string {
+function getOptimizePrompt(templateId: AnyTemplateId, content: string): string {
   // Use the new layout-based prompt system
   return getLayoutOptimizationPrompt(templateId, content);
 }

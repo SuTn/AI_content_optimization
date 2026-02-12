@@ -5,7 +5,7 @@ import { Sparkles, Loader2 } from 'lucide-react';
 import { useAIOptimize } from '@/hooks/useAIOptimize';
 import { TemplateSelector } from './TemplateSelector';
 import { AIPreviewModal } from './AIPreviewModal';
-import { AIConfig, TemplateId } from '@/types/ai';
+import { AIConfig, AnyTemplateId } from '@/types/ai';
 
 interface AIOptimizeButtonProps {
   articleId: string;
@@ -54,7 +54,7 @@ export function AIOptimizeButton({
     setShowTemplateSelector(true);
   };
 
-  const handleSelectTemplate = async (templateId: TemplateId) => {
+  const handleSelectTemplate = async (templateId: AnyTemplateId) => {
     setShowTemplateSelector(false);
     loadHistory();
 

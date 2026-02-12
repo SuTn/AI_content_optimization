@@ -47,7 +47,13 @@
 
 ### AI 智能优化 🚀
 - **多模型支持**：OpenAI、通义千问、文心一言、豆包、智谱 AI、自定义
-- **风格模板**：简约、商务、活泼、学术、杂志五种优化风格
+- **风格模板**：简约、商务、活泼、学术、杂志五种内置风格
+- **自定义模板**：完全可配置的自定义模板系统
+  - 自定义系统提示词、布局指导、示例输出
+  - 配置布局组件偏好（卡片样式、信息框、重点区域等）
+  - 版本历史管理（最多10个版本）
+  - 导入/导出模板（JSON格式）
+  - 模板分享功能
 - **流式输出**：实时显示 AI 生成内容
 - **历史版本**：保存优化历史，支持一键回退
 - **智能分段**：长文自动分段处理，保持上下文连贯
@@ -71,6 +77,8 @@ wechat/
 │   ├── api/
 │   │   └── optimize/
 │   │       └── route.ts      # AI 优化 API 接口
+│   ├── templates/
+│   │   └── page.tsx        # 模板管理页面
 │   ├── layout.tsx            # 根布局
 │   ├── page.tsx              # 主页面
 │   └── globals.css           # 全局样式
@@ -84,6 +92,12 @@ wechat/
 │   ├── AIConfigPanel.tsx     # AI 配置面板
 │   ├── AIOptimizeButton.tsx  # AI 优化按钮
 │   ├── TemplateSelector.tsx  # 风格模板选择器
+│   ├── TemplateCard.tsx      # 模板卡片组件
+│   ├── TemplateEditor.tsx    # 模板编辑器
+│   ├── EnhancedTextarea.tsx  # 增强文本输入框
+│   ├── TemplateVersionHistory.tsx # 版本历史弹窗
+│   ├── TemplateShareModal.tsx     # 模板分享弹窗
+│   ├── TemplateImportModal.tsx    # 模板导入弹窗
 │   └── AIPreviewModal.tsx    # 优化结果预览弹窗
 │
 ├── hooks/                    # 自定义 Hooks
@@ -91,12 +105,16 @@ wechat/
 │   ├── useArticles.ts        # 文章列表管理
 │   ├── useSettings.ts        # 用户设置管理
 │   ├── useAIConfig.ts        # AI 配置管理
-│   └── useAIOptimize.ts      # AI 优化状态管理
+│   ├── useAIOptimize.ts      # AI 优化状态管理
+│   └── useTemplates.ts      # 模板状态管理
 │
 ├── lib/                      # 工具库
 │   ├── storage.ts            # localStorage 操作封装
+│   ├── templateStorage.ts    # 模板存储操作
 │   ├── markdown.ts           # Markdown 解析配置
 │   ├── wechatStyle.ts        # 微信样式生成器
+│   ├── prompts/             # AI 提示词模板
+│   │   └── layoutPrompts.ts
 │   └── utils.ts              # 工具函数
 │
 ├── types/                    # TypeScript 类型定义
@@ -194,10 +212,38 @@ AI_MAX_TOKENS=8000
 ### AI 优化
 
 1. 点击「AI优化」按钮
-2. 选择优化风格模板（简约/商务/活泼/学术/杂志）
+2. 选择优化风格模板（简约/商务/活泼/学术/杂志）或自定义模板
 3. AI 流式生成优化内容
 4. 预览对比优化效果
 5. 点击「应用优化」或选择历史版本
+
+### 模板管理 🎨
+
+点击工具栏的文件图标进入模板管理页面，或选择模板时点击「管理模板」链接：
+
+**内置模板**
+- 查看5种预设风格模板
+- 点击「复制」创建基于内置模板的自定义版本
+
+**创建自定义模板**
+1. 点击「新建模板」
+2. 填写基本信息（图标、名称、描述）
+3. 配置提示词：
+   - **系统提示词**：定义 AI 角色和风格
+   - **布局指导**：指定使用的布局组件
+   - **示例输出**：提供参考示例
+4. 设置布局偏好（卡片样式、信息框、重点区域等）
+5. 配置 AI 参数（可选）
+6. 预览并保存
+
+**模板操作**
+- **编辑**：修改现有模板
+- **复制**：快速创建模板副本
+- **删除**：删除不需要的自定义模板
+- **版本历史**：查看和恢复历史版本
+- **导出**：导出单个或全部模板为 JSON
+- **导入**：从 JSON 文件或剪贴板导入模板
+- **分享**：复制模板 JSON 分享给他人
 
 ## 🏗️ 开发指南
 
@@ -260,6 +306,43 @@ Key: "mopai_ai_history_{articleId}"
     "createdAt": 1707654321000
   }
 ]
+
+// 模板数据
+Key: "mopai_templates"
+{
+  "custom": [
+    {
+      "id": "custom_1707654321000",
+      "name": "科技风格",
+      "description": "适合科技类内容的排版",
+      "icon": "🚀",
+      "systemPrompt": "你是一个专业的...",
+      "layoutPrompt": "## 推荐组件...",
+      "exampleOutput": "# 标题...",
+      "features": ["卡片", "信息框"],
+      "source": "custom",
+      "createdAt": 1707654321000,
+      "updatedAt": 1707654389000,
+      "version": 1
+    }
+  ],
+  "builtin": ["simple", "business", "lively", "academic", "magazine"]
+}
+
+// 模板版本历史
+Key: "mopai_template_versions_{templateId}"
+{
+  "templateId": "custom_1707654321000",
+  "versions": [
+    {
+      "id": "v_xxx",
+      "templateId": "custom_1707654321000",
+      "config": { /* 完整的模板配置 */ },
+      "createdAt": 1707654321000,
+      "changeDescription": "修改了系统提示词"
+    }
+  ]
+}
 ```
 
 ### API 接口
@@ -339,8 +422,8 @@ A: 目前不支持，所有数据存储在本地。如需多设备使用，建�
 - [ ] 支持导入本地 Markdown 文件
 - [ ] 添加图片上传功能（图床集成）
 - [ ] 支持云存储同步
-- [ ] 添加更多优化风格模板
-- [ ] 支持自定义优化 prompt
+- [ ] 添加更多内置优化风格模板
+- [x] 支持自定义优化 prompt ✅
 - [ ] 添加文章统计功能（阅读时间估算等）
 - [ ] 支持快捷键操作
 - [ ] 添加暗黑模式

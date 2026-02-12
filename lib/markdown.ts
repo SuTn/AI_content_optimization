@@ -14,22 +14,36 @@ function camelToKebab(str: string): string {
 }
 
 /**
- * Adjust color opacity
+ * Adjust color opacity (removed - WeChat doesn't support rgba)
+ * Use lightenColor instead for light backgrounds
  */
-function addAlpha(color: string, opacity: number): string {
+function lightenColor(color: string, amount: number = 0.9): string {
+  // For WeChat compatibility, return a very light hex color or named color
+  // This is a simplified version - blends with white
   if (color.startsWith('#')) {
     const hex = color.slice(1);
     if (hex.length === 6) {
+      // Mix with white for lighter version
       const r = parseInt(hex.slice(0, 2), 16);
       const g = parseInt(hex.slice(2, 4), 16);
       const b = parseInt(hex.slice(4, 6), 16);
-      return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+
+      const newR = Math.round(r + (255 - r) * amount);
+      const newG = Math.round(g + (255 - g) * amount);
+      const newB = Math.round(b + (255 - b) * amount);
+
+      return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
     }
   }
-  if (color.startsWith('rgb')) {
-    return color.replace(')', `, ${opacity})`).replace('rgb', 'rgba');
-  }
   return color;
+}
+
+/**
+ * Adjust color opacity (deprecated - kept for backward compatibility)
+ * Use lightenColor instead
+ */
+function addAlpha(color: string, opacity: number): string {
+  return lightenColor(color, 1 - opacity);
 }
 
 /**
@@ -50,7 +64,8 @@ function getDividerStyles(style: string, primaryColor: string, customColor?: str
     case 'dotted':
       return { ...baseStyle, borderTop: `1px dotted ${color}`, backgroundColor: 'transparent' };
     case 'gradient':
-      return { ...baseStyle, background: `linear-gradient(90deg, transparent 0%, ${color} 50%, transparent 100%)`, height: '2px' };
+      // WeChat doesn't support linear-gradient, use solid color instead
+      return { ...baseStyle, backgroundColor: color, height: '2px' };
     default:
       return baseStyle;
   }
@@ -116,7 +131,7 @@ export function sanitizeHtml(html: string): string {
       'td',
       'section',
     ],
-    ALLOWED_ATTR: ['style', 'href', 'src', 'alt', 'title', 'target'],
+    ALLOWED_ATTR: ['style', 'href', 'src', 'alt', 'title', 'target', 'data-wechat-layout'],
     ALLOW_DATA_ATTR: false,
   });
 }
@@ -228,14 +243,17 @@ function generateDividerHtmlFromConfig(config: { style: string; text?: string; c
     .join('; ');
 
   if (config.text) {
-    return `<div style="display: flex; align-items: center; margin: 24px 0;">
-      <div style="flex: 1; ${styleAttr}"></div>
-      <span style="padding: 0 16px; color: #666; font-size: 14px;">${config.text}</span>
-      <div style="flex: 1; ${styleAttr}"></div>
-    </div>`;
+    // Use table layout instead of flex for WeChat compatibility
+    return `<table data-wechat-layout="true" style="width: 100%; margin: 24px 0; border-collapse: collapse;">
+      <tr>
+        <td style="${styleAttr}"></td>
+        <td style="padding: 0 16px; color: #666; font-size: 14px; white-space: nowrap;">${config.text}</td>
+        <td style="${styleAttr}"></td>
+      </tr>
+    </table>`;
   }
 
-  return `<div style="${styleAttr}; margin: 24px 0;"></div>`;
+  return `<div data-wechat-layout="true" style="${styleAttr}; margin: 24px 0;"></div>`;
 }
 
 /**
@@ -247,7 +265,9 @@ function generateComponentHtmlFromComponent(component: any, primaryColor: string
     case 'callout': {
       const { title = '' } = component.params;
       const renderedContent = markdownToHtmlLocal(component.content);
-      return `<div style="border: 2px solid ${primaryColor}; background: ${addAlpha(primaryColor, 0.05)}; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      // WeChat doesn't support rgba, use hex color with pre-calculated opacity
+      const bgColor = lightenColor(primaryColor, 0.95); // Very light version
+      return `<div data-wechat-layout="true" style="border: 2px solid ${primaryColor}; background: ${bgColor}; border-radius: 8px; padding: 20px; margin: 20px 0;">
         ${title ? `<div style="font-size: 18px; font-weight: bold; color: ${primaryColor}; margin-bottom: 12px;">${title}</div>` : ''}
         ${renderedContent}
       </div>`;
@@ -259,17 +279,19 @@ function generateComponentHtmlFromComponent(component: any, primaryColor: string
       const listItems = items.map((item: string) => {
         if (!/^[-*]\s*/.test(item)) {
           const renderedItem = markdownToHtmlLocal(item);
-          return `<div style="margin: 12px 0; padding-left: 40px;">${renderedItem}</div>`;
+          return `<tr><td colspan="2" style="padding: 4px 0;">${renderedItem}</td></tr>`;
         }
         listNumber++;
         const cleanItem = item.replace(/^[-*]\s*/, '');
         const renderedItem = markdownToHtmlLocal(cleanItem);
-        return `<div style="margin: 12px 0;">
-          <span style="display: inline-block; width: 28px; height: 28px; line-height: 28px; text-align: center; background: ${primaryColor}; color: #fff; border-radius: 50%; margin-right: 12px; font-weight: bold; font-size: 14px;">${listNumber}</span>
-          <span style="display: inline-block; vertical-align: top; width: calc(100% - 40px); margin-top: 4px;">${renderedItem}</span>
-        </div>`;
+        return `<tr>
+          <td style="padding: 4px 8px 4px 0; vertical-align: top;">
+            <span style="display: inline-block; width: 28px; height: 28px; line-height: 28px; text-align: center; background: ${primaryColor}; color: #fff; border-radius: 50%; font-weight: bold; font-size: 14px;">${listNumber}</span>
+          </td>
+          <td style="padding: 4px 0;">${renderedItem}</td>
+        </tr>`;
       }).join('');
-      return `<div style="padding: 16px 0;">${listItems}</div>`;
+      return `<table data-wechat-layout="true" style="width: 100%; margin: 12px 0; border-collapse: collapse;">${listItems}</table>`;
     }
 
     case 'tip':
@@ -282,7 +304,7 @@ function generateComponentHtmlFromComponent(component: any, primaryColor: string
       const { title = '', icon = '' } = component.params;
 
       const configs: Record<string, { color: string; bg: string; icon: string }> = {
-        tip: { color: primaryColor, bg: addAlpha(primaryColor, 0.08), icon: '💡' },
+        tip: { color: primaryColor, bg: lightenColor(primaryColor, 0.92), icon: '💡' },
         warning: { color: '#fa8c16', bg: '#fff7e6', icon: '⚠️' },
         success: { color: '#52c41a', bg: '#f6ffed', icon: '✓' },
         error: { color: '#ff4d4f', bg: '#fff1f0', icon: '✕' },
@@ -294,7 +316,7 @@ function generateComponentHtmlFromComponent(component: any, primaryColor: string
       const boxIcon = icon || defaultIcon;
       const renderedContent = markdownToHtmlLocal(component.content);
 
-      return `<div style="border-left: 4px solid ${color}; background-color: ${bg}; padding: 16px; margin: 16px 0; border-radius: 4px;">
+      return `<div data-wechat-layout="true" style="border-left: 4px solid ${color}; background-color: ${bg}; padding: 16px; margin: 16px 0; border-radius: 4px;">
         ${title ? `<div style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: ${color};">${boxIcon} ${title}</div>` : `<div style="margin-bottom: 8px; font-weight: bold; color: ${color};">${boxIcon}</div>`}
         ${renderedContent}
       </div>`;
@@ -307,12 +329,12 @@ function generateComponentHtmlFromComponent(component: any, primaryColor: string
         const renderedItem = markdownToHtmlLocal(cleanItem);
         const arrow = index < items.length - 1 ?
           `<div style="text-align: center; color: ${primaryColor}; font-size: 20px; margin: 4px 0;">↓</div>` : '';
-        return `<div style="border: 1px solid ${primaryColor}; background: ${addAlpha(primaryColor, 0.05)}; border-radius: 8px; padding: 16px; margin: 8px 0; text-align: center;">
+        return `<div style="border: 1px solid ${primaryColor}; background: ${lightenColor(primaryColor, 0.95)}; border-radius: 8px; padding: 16px; margin: 8px 0; text-align: center;">
           <span style="display: inline-block; min-width: 24px; height: 24px; line-height: 24px; background: ${primaryColor}; color: #fff; border-radius: 4px; padding: 0 8px; margin-right: 8px; font-size: 14px; font-weight: bold;">${index + 1}</span>
           <span style="font-size: 15px;">${renderedItem}</span>
         </div>${arrow}`;
       }).join('');
-      return `<div style="padding: 8px 0;">${steps}</div>`;
+      return `<div data-wechat-layout="true" style="padding: 8px 0;">${steps}</div>`;
     }
 
     case 'timeline': {
@@ -320,13 +342,19 @@ function generateComponentHtmlFromComponent(component: any, primaryColor: string
       const timelineItems = items.map((item: string, index: number) => {
         const cleanItem = item.replace(/^[-*]\s*/, '');
         const renderedItem = markdownToHtmlLocal(cleanItem);
-        return `<div style="position: relative; margin: 16px 0; padding-left: 28px;">
-          ${index < items.length - 1 ? `<div style="position: absolute; left: 5px; top: 12px; bottom: -16px; width: 2px; background: #e8e8e8;"></div>` : ''}
-          <span style="display: inline-block; width: 12px; height: 12px; background: ${primaryColor}; border-radius: 50%; margin-right: 16px; margin-left: ${index === 0 ? '0' : '6px'}; vertical-align: top;"></span>
-          <div style="display: inline-block; vertical-align: top; width: calc(100% - 28px);">${renderedItem}</div>
-        </div>`;
+        // Use table layout instead of inline-block for WeChat compatibility
+        return `<table style="width: 100%; margin: 16px 0; border-collapse: collapse;">
+          <tr>
+            <td style="width: 32px; padding: 0; vertical-align: top; text-align: center;">
+              <span style="display: inline-block; width: 12px; height: 12px; background: ${primaryColor}; border-radius: 50%;"></span>
+            </td>
+            <td style="padding: 0 0 0 8px; vertical-align: top;">
+              <div style="border-left: 2px solid #e8e8e8; padding-left: 12px; margin-left: -4px;">${renderedItem}</div>
+            </td>
+          </tr>
+        </table>`;
       }).join('');
-      return `<div style="padding: 8px 0;">${timelineItems}</div>`;
+      return `<div data-wechat-layout="true" style="padding: 8px 0;">${timelineItems}</div>`;
     }
 
     case 'comparison': {
@@ -343,7 +371,7 @@ function generateComponentHtmlFromComponent(component: any, primaryColor: string
         }).join('');
         return `<tr>${cells}</tr>`;
       }).join('');
-      return `<table style="width: 100%; border-collapse: collapse; margin: 16px 0;">${rows}</table>`;
+      return `<table data-wechat-layout="true" style="width: 100%; border-collapse: collapse; margin: 16px 0;">${rows}</table>`;
     }
 
     case 'card': {
@@ -359,16 +387,19 @@ function generateComponentHtmlFromComponent(component: any, primaryColor: string
           variantStyle = `border: 2px solid ${primaryColor}; background-color: #fafafa;`;
           break;
         case 'gradient':
-          variantStyle = `border: none; background: linear-gradient(135deg, ${addAlpha(primaryColor, 0.15)} 0%, ${addAlpha(primaryColor, 0.05)} 100%);`;
+          // WeChat doesn't support linear-gradient, use light solid color
+          variantStyle = `border: 1px solid ${lightenColor(primaryColor, 0.85)}; background-color: ${lightenColor(primaryColor, 0.95)};`;
           break;
         case 'shadow':
-          variantStyle = 'border: 1px solid #e8e8e8; background-color: #ffffff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);';
+          // WeChat doesn't support box-shadow, use border instead
+          variantStyle = 'border: 2px solid #e8e8e8; background-color: #ffffff;';
           break;
         case 'bordered':
           variantStyle = 'border: 3px double #d4d4d4; background-color: #fafafa;';
           break;
         case 'glass':
-          variantStyle = 'border: 1px solid rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);';
+          // WeChat doesn't support rgba, use solid colors
+          variantStyle = 'border: 1px solid #d4d4d4; background: #ffffff;';
           break;
         default:
           variantStyle = 'border: 1px solid #e8e8e8; background-color: #ffffff;';
@@ -381,12 +412,12 @@ function generateComponentHtmlFromComponent(component: any, primaryColor: string
         </div>` : '';
 
       const renderedContent = markdownToHtmlLocal(component.content);
-      return `<div style="${baseStyle} ${variantStyle}">${titleHtml}${renderedContent}</div>`;
+      return `<div data-wechat-layout="true" style="${baseStyle} ${variantStyle}">${titleHtml}${renderedContent}</div>`;
     }
 
     case 'spacer': {
       const { height = '20' } = component.params;
-      return `<div style="height: ${height}px; overflow: hidden;"></div>`;
+      return `<div data-wechat-layout="true" style="height: ${height}px;"></div>`;
     }
 
     case 'badge': {
@@ -403,12 +434,13 @@ function generateComponentHtmlFromComponent(component: any, primaryColor: string
           break;
         case 'soft':
         default:
-          variantStyle = `background-color: ${addAlpha(badgeColor, 0.1)}; color: ${badgeColor};`;
+          // WeChat doesn't support rgba, use lightenColor
+          variantStyle = `background-color: ${lightenColor(badgeColor, 0.9)}; color: ${badgeColor};`;
           break;
       }
 
       const baseStyle = 'display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 12px; margin: 4px;';
-      return `<span style="${baseStyle} ${variantStyle}">${text || component.content}</span>`;
+      return `<span data-wechat-layout="true" style="${baseStyle} ${variantStyle}">${text || component.content}</span>`;
     }
 
     case 'button': {
@@ -435,7 +467,7 @@ function generateComponentHtmlFromComponent(component: any, primaryColor: string
       const href = url ? `href="${url}"` : '';
       const tag = url ? 'a' : 'div';
 
-      return `<${tag} ${href} style="${baseStyle} ${variantStyle}">${renderedText}</${tag}>`;
+      return `<${tag} data-wechat-layout="true" ${href} style="${baseStyle} ${variantStyle}">${renderedText}</${tag}>`;
     }
 
     case 'progress': {
@@ -444,8 +476,9 @@ function generateComponentHtmlFromComponent(component: any, primaryColor: string
       const barHeight = parseInt(height, 10);
       const clampedPercent = Math.min(100, Math.max(0, parseInt(percent, 10)));
 
-      return `<div style="width: 100%; height: ${barHeight}px; background: #f0f0f0; border-radius: ${barHeight / 2}px; overflow: hidden; margin: 12px 0;">
-        <div style="height: 100%; width: ${clampedPercent}%; background: ${barColor}; border-radius: ${barHeight / 2}px; transition: width 0.3s ease;"></div>
+      // WeChat doesn't support transition or overflow:hidden, removed both
+      return `<div data-wechat-layout="true" style="width: 100%; height: ${barHeight}px; background: #f0f0f0; border-radius: ${barHeight / 2}px; margin: 12px 0;">
+        <div style="height: 100%; width: ${clampedPercent}%; background: ${barColor}; border-radius: ${barHeight / 2}px;"></div>
       </div>`;
     }
 

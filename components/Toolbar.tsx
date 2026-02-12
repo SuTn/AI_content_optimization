@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Clock, Settings, Copy, Check } from 'lucide-react';
+import Link from 'next/link';
+import { Plus, Clock, Settings, Copy, Check, FileText } from 'lucide-react';
 import { ArticleList } from './ArticleList';
 import { SettingPanel } from './SettingPanel';
 import { AIConfigPanel } from './AIConfigPanel';
@@ -115,6 +116,15 @@ export function Toolbar({
               <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
             </svg>
           </button>
+
+          {/* Template Management */}
+          <Link
+            href="/templates"
+            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+            title="模板管理"
+          >
+            <FileText size={20} />
+          </Link>
 
           {/* AI Optimize */}
           <AIOptimizeButton
