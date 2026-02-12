@@ -16,6 +16,7 @@ export function Preview({ content, settings }: PreviewProps) {
   useEffect(() => {
     if (!containerRef.current) return;
 
+    // Use basic markdown parsing
     const html = parseMarkdown(content);
     const styledHtml = generateWechatHtml(html, settings);
     containerRef.current.innerHTML = styledHtml;

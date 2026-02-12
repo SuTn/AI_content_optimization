@@ -7,7 +7,7 @@ import { useAIConfig } from '@/hooks/useAIConfig';
 import { Editor } from '@/components/Editor';
 import { Preview } from '@/components/Preview';
 import { Toolbar } from '@/components/Toolbar';
-import { parseMarkdown, sanitizeHtml } from '@/lib/markdown';
+import { parseMarkdown } from '@/lib/markdown';
 import { generateWechatHtml } from '@/lib/wechatStyle';
 import { countChars } from '@/lib/utils';
 
@@ -42,9 +42,9 @@ export default function Home() {
   const handleExportHtml = async () => {
     if (!article) return;
 
+    // Use basic markdown parsing for WeChat
     const html = parseMarkdown(article.content);
-    const cleanHtml = sanitizeHtml(html);
-    const styledHtml = generateWechatHtml(cleanHtml, settings);
+    const styledHtml = generateWechatHtml(html, settings);
 
     try {
       // Use Clipboard API with text/html format
@@ -92,10 +92,12 @@ export default function Home() {
       />
 
       <div className="flex-1 flex overflow-hidden">
-        <Editor
-          content={article?.content || ''}
-          onChange={updateContent}
-        />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Editor
+            content={article?.content || ''}
+            onChange={updateContent}
+          />
+        </div>
         <Preview
           content={article?.content || ''}
           settings={settings}

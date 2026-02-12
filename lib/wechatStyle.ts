@@ -21,6 +21,13 @@ export function generateWechatHtml(html: string, settings: Settings): string {
 }
 
 /**
+ * Check if element is a layout component
+ */
+function isLayoutComponent(el: Element): boolean {
+  return el.hasAttribute('data-layout-component');
+}
+
+/**
  * Apply inline styles to elements
  */
 function applyStyles(container: HTMLElement, fontSize: number, lineHeight: number, primaryColor: string): void {
@@ -34,6 +41,11 @@ function applyStyles(container: HTMLElement, fontSize: number, lineHeight: numbe
   const elements = container.querySelectorAll('*');
 
   elements.forEach((el) => {
+    // Skip elements that already have inline styles (like layout components)
+    if (el.hasAttribute('style') && el.getAttribute('style')) {
+      return;
+    }
+
     const tag = el.tagName.toLowerCase();
 
     switch (tag) {
@@ -75,8 +87,10 @@ function applyStyles(container: HTMLElement, fontSize: number, lineHeight: numbe
         el.setAttribute('style', `background: #f8f8f8; padding: 1em; overflow-x: auto; font-size: 14px; line-height: 1.5; margin: 1em 0;`);
         break;
       case 'ul':
+        el.setAttribute('style', `margin: 1em 0; padding-left: 2em; list-style-type: disc;`);
+        break;
       case 'ol':
-        el.setAttribute('style', `margin: 1em 0; padding-left: 2em;`);
+        el.setAttribute('style', `margin: 1em 0; padding-left: 2em; list-style-type: decimal;`);
         break;
       case 'li':
         el.setAttribute('style', `margin: 0.5em 0;`);
@@ -103,6 +117,12 @@ function applyStyles(container: HTMLElement, fontSize: number, lineHeight: numbe
         break;
       case 'hr':
         el.setAttribute('style', `border: none; border-top: 1px solid #eee; margin: 2em 0;`);
+        break;
+      case 'section':
+        // Section elements are used for layout components
+        if (!isLayoutComponent(el)) {
+          el.setAttribute('style', `margin: 1.5em 0;`);
+        }
         break;
     }
   });

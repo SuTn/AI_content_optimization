@@ -60,9 +60,33 @@ export function sanitizeHtml(html: string): string {
 }
 
 /**
- * Parse markdown and sanitize
+ * Parse markdown and sanitize - Basic parsing for WeChat
  */
 export function parseMarkdown(markdown: string): string {
   const html = markdownToHtml(markdown);
   return sanitizeHtml(html);
+}
+
+/**
+ * Check if markdown contains layout components
+ */
+export function hasLayoutComponents(markdown: string): boolean {
+  return /:::(\w+)|---style=\w+---/.test(markdown);
+}
+
+/**
+ * Smart parse markdown - currently uses basic parsing only
+ */
+export function smartParseMarkdown(markdown: string, primaryColor: string): string {
+  // Use basic parsing to avoid content errors
+  return parseMarkdown(markdown);
+}
+
+/**
+ * Parse markdown with layout components - DISABLED for now
+ * Using basic parsing to prevent content errors
+ */
+export function parseMarkdownWithLayout(markdown: string, primaryColor: string = '#1890ff'): string {
+  // Currently disabled - use basic parsing
+  return parseMarkdown(markdown);
 }

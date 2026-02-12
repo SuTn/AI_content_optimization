@@ -108,7 +108,7 @@ export const TEMPLATES: Record<TemplateId, TemplateConfig> = {
     name: '简约风格',
     description: '清晰简洁，注重信息传达，适合技术文章和教程',
     icon: '📝',
-    features: ['简洁分隔线', '重点加粗', '结构清晰'],
+    features: ['简洁分隔线', '重点加粗', '结构清晰', '基础卡片'],
     systemPrompt: '你是一个专业的公众号排版优化助手，擅长将内容优化为简约清晰风格。',
     exampleOutput: `# 标题
 
@@ -116,7 +116,9 @@ export const TEMPLATES: Record<TemplateId, TemplateConfig> = {
 
 ## 章节标题
 
-> 重要提示信息
+:::tip
+提示信息
+:::
 
 正文内容，**重点词汇加粗**。
 
@@ -126,20 +128,24 @@ export const TEMPLATES: Record<TemplateId, TemplateConfig> = {
 
 ### 子章节
 
-列表内容：
+:::numbered
 - 要点一
-- 要点二`,
+- 要点二
+- 要点三
+:::`,
   },
   business: {
     id: 'business',
     name: '商务风格',
     description: '专业稳重，适合商业分析、行业报告等专业内容',
     icon: '💼',
-    features: ['结构化表达', '数据展示', '专业严谨'],
+    features: ['结构化表达', '数据展示', '专业严谨', '卡片布局'],
     systemPrompt: '你是一个专业的公众号排版优化助手，擅长将内容优化为商务专业风格。',
     exampleOutput: `# 文章标题
 
-> 本期聚焦：核心主题概览
+:::card variant="bordered" title="摘要"
+本期聚焦：核心主题概览
+:::
 
 ---
 
@@ -151,9 +157,16 @@ export const TEMPLATES: Record<TemplateId, TemplateConfig> = {
 
 ## 02 核心观点
 
-> **关键洞察**：最重要的观点总结
+:::numbered
+- 观点一：详细说明
+- 观点二：详细说明
+- 观点三：详细说明
+:::
 
-详细阐述...
+:::comparison
+传统方案 | 创新方案
+特点说明 | 特点说明
+:::
 
 ---
 
@@ -166,11 +179,13 @@ export const TEMPLATES: Record<TemplateId, TemplateConfig> = {
     name: '活泼风格',
     description: '轻松有趣，使用emoji增强表达，适合生活方式类内容',
     icon: '🎨',
-    features: ['Emoji点缀', '轻松语调', '视觉丰富'],
+    features: ['Emoji点缀', '轻松语调', '视觉丰富', '渐变卡片'],
     systemPrompt: '你是一个专业的公众号排版优化助手，擅长将内容优化为活泼有趣风格。',
     exampleOutput: `# 🎯 标题
 
-> 💡 小贴士：吸引人的开头
+:::card variant="gradient" title="💡 开篇"
+吸引人的开头...
+:::
 
 ---
 
@@ -178,7 +193,17 @@ export const TEMPLATES: Record<TemplateId, TemplateConfig> = {
 
 正文内容... ✨
 
-> ⚠️ **注意**：重要提醒
+:::warning
+⚠️ 注意：重要提醒
+:::
+
+---
+
+:::process
+- 步骤一：开始
+- 步骤二：进行中
+- 步骤三：完成
+:::
 
 ---
 
@@ -193,13 +218,15 @@ export const TEMPLATES: Record<TemplateId, TemplateConfig> = {
     name: '学术风格',
     description: '严谨规范，适合学术论文、研究报告等严肃内容',
     icon: '📚',
-    features: ['引用规范', '术语标注', '逻辑严密'],
+    features: ['引用规范', '术语标注', '逻辑严密', '边框卡片'],
     systemPrompt: '你是一个专业的公众号排版优化助手，擅长将内容优化为学术严谨风格。',
     exampleOutput: `# 文章标题
 
+:::card variant="bordered" title="摘要"
 **摘要**：简要概述研究内容和结论...
 
 **关键词**：关键词1、关键词2、关键词3
+:::
 
 ---
 
@@ -207,7 +234,27 @@ export const TEMPLATES: Record<TemplateId, TemplateConfig> = {
 
 研究背景和目的...
 
-> **术语定义**：重要术语的学术定义
+:::note
+📝 **术语定义**：重要术语的学术定义
+:::
+
+---
+
+## 02 文献综述
+
+:::quote
+"引用的重要观点"
+:::
+
+---
+
+## 03 研究方法
+
+:::process
+- 数据收集
+- 数据分析
+- 结果验证
+:::
 
 ---
 
@@ -215,35 +262,50 @@ export const TEMPLATES: Record<TemplateId, TemplateConfig> = {
 
 研究总结...
 
-> **启示**：对未来研究的启示`,
+:::note
+**启示**：对未来研究的启示
+:::`,
   },
   magazine: {
     id: 'magazine',
     name: '杂志风格',
     description: '精美排版，视觉丰富，适合深度报道、人物专访等内容',
     icon: '📰',
-    features: ['视觉层次', '引用增强', '阅读节奏'],
+    features: ['视觉层次', '引用增强', '阅读节奏', '阴影卡片'],
     systemPrompt: '你是一个专业的公众号排版优化助手，擅长将内容优化为杂志精美风格。',
     exampleOutput: `# 文章标题
 
----
+---style=gradient---
 
-> *导语：用一两句话概括文章精华，吸引读者继续阅读*
+:::quote
+"导语：用一两句话概括文章精华，吸引读者继续阅读"
+:::
 
 ---
 
 ## 第一章：章节标题
 
+:::card variant="shadow" title="核心观点"
 正文内容...
+:::
 
 ---
 
-### 核心观点
+### 关键洞察
 
-> **"引用原文或核心观点"**
-> — 出处/作者
+:::callout title="为什么重要"
+解释内容的重要性
+:::
 
 ---
+
+:::timeline
+- 起源：开始的故事
+- 转折：关键时刻
+- 现在：当前的状态
+:::
+
+---style=gradient---
 
 ## 延伸阅读
 

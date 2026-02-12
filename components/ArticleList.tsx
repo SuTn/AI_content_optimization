@@ -67,7 +67,12 @@ export function ArticleList({
                   {article.title}
                 </div>
                 <div className="text-xs text-gray-500">
-                  {article.relativeTime}
+                  {new Date(article.updatedAt).toLocaleString('zh-CN', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
                 </div>
               </div>
               <button

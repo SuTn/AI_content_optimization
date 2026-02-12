@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AIConfig, TemplateId } from '@/types/ai';
+import { getLayoutOptimizationPrompt } from '@/lib/prompts/layoutPrompts';
+import { getTemplatePrimaryColor } from '@/lib/templateLayouts';
 
 export const runtime = 'edge';
 
@@ -40,9 +42,9 @@ export async function POST(req: NextRequest) {
 
     // Check if content needs chunking
     const contentTokens = content.length;
-    const needsChunking = useChunking || contentTokens > maxTokens;
 
-    if (needsChunking) {
+    // Only use chunking for very long content (over 10000 chars)
+    if (contentTokens > 10000) {
       return NextResponse.json({
         success: true,
         needsChunking: true,
@@ -82,6 +84,8 @@ export async function POST(req: NextRequest) {
       model,
       baseUrl,
       hasApiKey: !!apiKey,
+      contentLength: content.length,
+      templateId,
     });
 
     // Call LLM API
@@ -112,6 +116,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    console.log('[AI Optimize] API Response OK, starting stream...');
+
     // Stream the response
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
@@ -126,10 +132,12 @@ export async function POST(req: NextRequest) {
         let buffer = '';
 
         try {
+          let chunkCount = 0;
           while (true) {
             const { done, value } = await reader.read();
 
             if (done) {
+              console.log('[AI Optimize] Stream done, total chunks:', chunkCount);
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));
               controller.close();
               break;
@@ -155,6 +163,10 @@ export async function POST(req: NextRequest) {
                 const content = parsed.choices?.[0]?.delta?.content;
 
                 if (content) {
+                  chunkCount++;
+                  if (chunkCount <= 5) {
+                    console.log('[AI Optimize] Chunk', chunkCount, ':', content.substring(0, 50));
+                  }
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'content', data: content })}\n\n`));
                 }
               } catch (e) {
@@ -309,58 +321,6 @@ function getSystemPrompt(templateId: TemplateId): string {
  * Get optimization prompt based on template
  */
 function getOptimizePrompt(templateId: TemplateId, content: string): string {
-  const templateInstructions: Record<TemplateId, string> = {
-    simple: `请将以下内容优化为简约清晰的公众号文章风格：
-1. 保持简洁明了，去除冗余
-2. 使用简单分隔线区分章节
-3. 对关键概念使用**加粗**
-4. 使用引用块突出重要信息
-5. 保持原文核心信息不变
-
-待优化内容：
-${content}`,
-
-    business: `请将以下内容优化为商务专业风格：
-1. 使用规范的章节编号（01、02、03...）
-2. 添加摘要部分
-3. 使用表格展示数据
-4. 专业术语使用引用块解释
-5. 添加关键要点总结
-6. 保持专业严谨语调
-
-待优化内容：
-${content}`,
-
-    lively: `请将以下内容优化为活泼有趣风格：
-1. 适当使用 emoji 增强可读性
-2. 使用轻松友好的语调
-3. 添加引人入胜的开头
-4. 使用信息卡片增加互动感
-5. 添加引导互动的结尾
-
-待优化内容：
-${content}`,
-
-    academic: `请将以下内容优化为学术严谨风格：
-1. 使用规范的引用格式
-2. 专业术语首次出现时注释
-3. 添加摘要和关键词
-4. 使用脚注标注数据来源
-5. 保持客观中立语调
-
-待优化内容：
-${content}`,
-
-    magazine: `请将以下内容优化为杂志精美风格：
-1. 添加吸引人的导语
-2. 使用多样化引用样式
-3. 用视觉元素控制阅读节奏
-4. 关键段落特殊标记
-5. 添加延伸阅读推荐
-
-待优化内容：
-${content}`,
-  };
-
-  return templateInstructions[templateId] || templateInstructions.simple;
+  // Use the new layout-based prompt system
+  return getLayoutOptimizationPrompt(templateId, content);
 }

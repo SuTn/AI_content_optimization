@@ -91,6 +91,13 @@ export function useAIOptimize({ articleId, onSave }: UseAIOptimizeOptions) {
     templateId: TemplateId,
     config: AIConfig
   ) => {
+    console.log('[useAIOptimize] Starting optimization:', {
+      contentLength: content.length,
+      templateId,
+      provider: config.provider,
+      hasApiKey: !!config.apiKey,
+    });
+
     setState({
       isOptimizing: true,
       isStreaming: true,
@@ -107,7 +114,7 @@ export function useAIOptimize({ articleId, onSave }: UseAIOptimizeOptions) {
           content,
           templateId,
           config,
-          useChunking: true,
+          useChunking: false,
         }),
       });
 
@@ -117,10 +124,12 @@ export function useAIOptimize({ articleId, onSave }: UseAIOptimizeOptions) {
 
       // Check if needs chunking
       const contentType = response.headers.get('content-type');
+      console.log('[useAIOptimize] Response content-type:', contentType);
 
       if (contentType?.includes('application/json')) {
         // JSON response means chunking is needed
         const data = await response.json();
+        console.log('[useAIOptimize] JSON response:', data);
         if (data.needsChunking) {
           setState(prev => ({
             ...prev,
@@ -140,6 +149,9 @@ export function useAIOptimize({ articleId, onSave }: UseAIOptimizeOptions) {
         throw new Error('无法读取响应');
       }
 
+      console.log('[useAIOptimize] Starting to read stream...');
+      let chunkCount = 0;
+
       while (true) {
         const { done, value } = await reader.read();
 
@@ -157,14 +169,20 @@ export function useAIOptimize({ articleId, onSave }: UseAIOptimizeOptions) {
             const parsed = JSON.parse(data);
 
             if (parsed.type === 'content') {
+              chunkCount++;
+              if (chunkCount <= 5) {
+                console.log('[useAIOptimize] Chunk', chunkCount, ':', parsed.data.substring(0, 50));
+              }
               accumulatedContent += parsed.data;
               setState(prev => ({
                 ...prev,
                 optimizedContent: accumulatedContent,
               }));
             } else if (parsed.type === 'error') {
+              console.error('[useAIOptimize] Error from stream:', parsed.data);
               throw new Error(parsed.data);
             } else if (parsed.type === 'done') {
+              console.log('[useAIOptimize] Stream done, total chunks:', chunkCount, 'content length:', accumulatedContent.length);
               setState(prev => ({
                 ...prev,
                 isStreaming: false,
@@ -178,10 +196,12 @@ export function useAIOptimize({ articleId, onSave }: UseAIOptimizeOptions) {
             }
           } catch (e) {
             // Skip invalid JSON
+            console.warn('[useAIOptimize] Failed to parse:', data);
           }
         }
       }
 
+      console.log('[useAIOptimize] Stream ended, accumulated content length:', accumulatedContent.length);
       return accumulatedContent;
     } catch (error) {
       setState(prev => ({

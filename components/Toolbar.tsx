@@ -105,6 +105,17 @@ export function Toolbar({
             <Settings size={20} />
           </button>
 
+          {/* AI Config */}
+          <button
+            onClick={() => setShowAIConfig(true)}
+            className="p-2 text-purple-600 hover:bg-purple-50 rounded transition-colors"
+            title="AI 配置"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+            </svg>
+          </button>
+
           {/* AI Optimize */}
           <AIOptimizeButton
             articleId={currentId || ''}
