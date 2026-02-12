@@ -17,7 +17,9 @@
       "Bash(npx tsc:*)",
       "Bash(timeout:*)",
       "Bash(node:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)"
     ]
   }
 }

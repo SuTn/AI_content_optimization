@@ -1,5 +1,8 @@
 # 墨排 (Mopai)
 
+- 说明：经测试，此种解析方式行不通，放弃此项目，导出格式微信公众号无法复原排版、显示界面如下
+![alt text](assets/image.png)
+
 > 本地运行的浏览器端 Markdown 编辑器，一键生成微信兼容 HTML，支持 AI 智能优化排版
 
 ![Next.js](https://img.shields.io/badge/Next.js-14.2-black)
