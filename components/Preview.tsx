@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { parseMarkdown } from '@/lib/markdown';
+import { parseMarkdownWithLayout } from '@/lib/markdown';
 import { generateWechatHtml } from '@/lib/wechatStyle';
 import { Settings } from '@/types';
 
@@ -16,8 +16,8 @@ export function Preview({ content, settings }: PreviewProps) {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Use basic markdown parsing
-    const html = parseMarkdown(content);
+    // Use layout-aware markdown parsing to support custom syntax
+    const html = parseMarkdownWithLayout(content, settings.primaryColor);
     const styledHtml = generateWechatHtml(html, settings);
     containerRef.current.innerHTML = styledHtml;
   }, [content, settings]);

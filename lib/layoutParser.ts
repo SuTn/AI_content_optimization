@@ -3,6 +3,7 @@
  * Parses custom syntax like :::card:::, :::tip:::, etc.
  */
 
+import { marked } from 'marked';
 import type {
   ParsedLayoutComponent,
   LayoutParserOptions,
@@ -11,6 +12,21 @@ import type {
   HighlightType,
   DividerStyle,
 } from '@/types/layout';
+
+/**
+ * Configure marked for local markdown rendering
+ */
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+});
+
+/**
+ * Local markdown to HTML converter (avoid circular dependency)
+ */
+function markdownToHtmlLocal(markdown: string): string {
+  return marked(markdown) as string;
+}
 
 /**
  * Default parser options
@@ -34,7 +50,7 @@ export function parseLayoutComponents(
   // Regular expression to match layout component blocks
   // Format: :::type param1="value1" param2="value2"\ncontent\n:::
   const regex = new RegExp(
-    `${escapeRegex(opts.prefix)}(\\w+)(\\s[^\\n]*?)?\\n([\\s\\S]*?)${escapeRegex(opts.suffix)}`,
+    `${escapeRegex(opts.prefix)}(\\w+)( [^\\n]*?)?\\n([\\s\\S]*?)${escapeRegex(opts.suffix)}`,
     'g'
   );
 
@@ -63,7 +79,7 @@ export function parseDividers(markdown: string): Array<{ start: number; end: num
   const dividers: Array<{ start: number; end: number; config: any }> = [];
 
   // Regex for custom divider syntax: ---style=type--- or ---style=type text="text"---
-  const regex = /---(\S+?)---/g;
+  const regex = /---([^---]*?)---/g;
 
   let match: RegExpExecArray | null;
   while ((match = regex.exec(markdown)) !== null) {
@@ -163,6 +179,55 @@ export function componentsToHtml(
 }
 
 /**
+ * Convert parsed dividers to HTML
+ */
+export function dividersToHtml(
+  markdown: string,
+  dividers: Array<{ start: number; end: number; config: any }>,
+  primaryColor: string
+): { html: string; replacements: number } {
+  let html = markdown;
+  let replacements = 0;
+
+  // Sort dividers by position (reverse order to avoid index issues)
+  const sortedDividers = [...dividers].sort((a, b) => b.start - a.start);
+
+  for (const divider of sortedDividers) {
+    const dividerHtml = generateDividerHtmlFromConfig(divider.config, primaryColor);
+
+    // Replace the original markdown with HTML
+    html =
+      html.slice(0, divider.start) +
+      dividerHtml +
+      html.slice(divider.end);
+
+    replacements++;
+  }
+
+  return { html, replacements };
+}
+
+/**
+ * Generate divider HTML from config
+ */
+function generateDividerHtmlFromConfig(config: { style: DividerStyle; text?: string; color?: string }, primaryColor: string): string {
+  const dividerStyles = getDividerStyles(config.style, primaryColor, config.color);
+  const styleAttr = Object.entries(dividerStyles)
+    .map(([k, v]) => `${camelToKebab(k)}: ${v}`)
+    .join('; ');
+
+  if (config.text) {
+    return `<div style="display: flex; align-items: center; margin: 24px 0;">
+      <div style="flex: 1; ${styleAttr}"></div>
+      <span style="padding: 0 16px; color: #666; font-size: 14px;">${config.text}</span>
+      <div style="flex: 1; ${styleAttr}"></div>
+    </div>`;
+  }
+
+  return `<div style="${styleAttr}; margin: 24px 0;"></div>`;
+}
+
+/**
  * Generate HTML for a parsed layout component
  */
 function generateComponentHtml(component: ParsedLayoutComponent, primaryColor: string): string {
@@ -222,7 +287,10 @@ function generateCardHtml(component: ParsedLayoutComponent, primaryColor: string
       ${icon ? `${icon} ` : ''}${title}
     </div>` : '';
 
-  return `<div style="${styleAttr}">${titleHtml}${component.content}</div>`;
+  // Render component content through markdown
+  const renderedContent = markdownToHtmlLocal(component.content);
+
+  return `<div style="${styleAttr}">${titleHtml}${renderedContent}</div>`;
 }
 
 /**
@@ -245,7 +313,10 @@ function generateInfoBoxHtml(component: ParsedLayoutComponent, primaryColor: str
     </div>` :
     `<div style="margin-bottom: 8px; font-weight: bold; color: ${styles.color};">${boxIcon}</div>`;
 
-  return `<div style="${containerStyle}">${titleHtml}${component.content}</div>`;
+  // Render component content through markdown
+  const renderedContent = markdownToHtmlLocal(component.content);
+
+  return `<div style="${containerStyle}">${titleHtml}${renderedContent}</div>`;
 }
 
 /**
@@ -257,17 +328,30 @@ function generateHighlightHtml(component: ParsedLayoutComponent, primaryColor: s
 
   switch (type) {
     case 'callout':
+      // Render component content through markdown
+      const renderedCalloutContent = markdownToHtmlLocal(component.content);
       return `<div style="border: 2px solid ${primaryColor}; background: ${addAlpha(primaryColor, 0.05)}; border-radius: 8px; padding: 20px; margin: 20px 0;">
         ${title ? `<div style="font-size: 18px; font-weight: bold; color: ${primaryColor}; margin-bottom: 12px;">${title}</div>` : ''}
-        ${component.content}
+        ${renderedCalloutContent}
       </div>`;
 
     case 'numbered': {
       const items = component.content.split('\n').filter(line => line.trim());
-      const listItems = items.map((item, index) => {
+      let listNumber = 0; // Separate counter for actual list items only
+      const listItems = items.map((item) => {
+        // Only process lines starting with - or * as list items
+        if (!/^[-*]\s*/.test(item)) {
+          // Non-list item, render as paragraph with left padding
+          const renderedItem = markdownToHtmlLocal(item);
+          return `<div style="margin: 12px 0; padding-left: 40px;">${renderedItem}</div>`;
+        }
+        listNumber++; // Only increment for actual list items
+        const cleanItem = item.replace(/^[-*]\s*/, '');
+        // Render each list item's markdown
+        const renderedItem = markdownToHtmlLocal(cleanItem);
         return `<div style="margin: 12px 0;">
-          <span style="display: inline-block; width: 28px; height: 28px; line-height: 28px; text-align: center; background: ${primaryColor}; color: #fff; border-radius: 50%; margin-right: 12px; font-weight: bold; font-size: 14px;">${index + 1}</span>
-          <span style="display: inline-block; vertical-align: top; width: calc(100% - 40px); margin-top: 4px;">${item.replace(/^[-*]\s*/, '')}</span>
+          <span style="display: inline-block; width: 28px; height: 28px; line-height: 28px; text-align: center; background: ${primaryColor}; color: #fff; border-radius: 50%; margin-right: 12px; font-weight: bold; font-size: 14px;">${listNumber}</span>
+          <span style="display: inline-block; vertical-align: top; width: calc(100% - 40px); margin-top: 4px;">${renderedItem}</span>
         </div>`;
       }).join('');
       return `<div style="padding: 16px 0;">${listItems}</div>`;
@@ -276,11 +360,14 @@ function generateHighlightHtml(component: ParsedLayoutComponent, primaryColor: s
     case 'process': {
       const items = component.content.split('\n').filter(line => line.trim());
       const steps = items.map((item, index) => {
+        const cleanItem = item.replace(/^[-*]\s*/, '');
+        // Render each step's markdown
+        const renderedItem = markdownToHtmlLocal(cleanItem);
         const arrow = index < items.length - 1 ?
           `<div style="text-align: center; color: ${primaryColor}; font-size: 20px; margin: 4px 0;">↓</div>` : '';
         return `<div style="border: 1px solid ${primaryColor}; background: ${addAlpha(primaryColor, 0.05)}; border-radius: 8px; padding: 16px; margin: 8px 0; text-align: center;">
           <span style="display: inline-block; min-width: 24px; height: 24px; line-height: 24px; background: ${primaryColor}; color: #fff; border-radius: 4px; padding: 0 8px; margin-right: 8px; font-size: 14px; font-weight: bold;">${index + 1}</span>
-          <span style="font-size: 15px;">${item.replace(/^[-*]\s*/, '')}</span>
+          <span style="font-size: 15px;">${renderedItem}</span>
         </div>${arrow}`;
       }).join('');
       return `<div style="padding: 8px 0;">${steps}</div>`;
@@ -289,10 +376,13 @@ function generateHighlightHtml(component: ParsedLayoutComponent, primaryColor: s
     case 'timeline': {
       const items = component.content.split('\n').filter(line => line.trim());
       const timelineItems = items.map((item, index) => {
+        const cleanItem = item.replace(/^[-*]\s*/, '');
+        // Render each timeline item's markdown
+        const renderedItem = markdownToHtmlLocal(cleanItem);
         return `<div style="position: relative; margin: 16px 0; padding-left: 28px;">
           ${index < items.length - 1 ? `<div style="position: absolute; left: 5px; top: 12px; bottom: -16px; width: 2px; background: #e8e8e8;"></div>` : ''}
           <span style="display: inline-block; width: 12px; height: 12px; background: ${primaryColor}; border-radius: 50%; margin-right: 16px; margin-left: ${index === 0 ? '0' : '6px'}; vertical-align: top;"></span>
-          <div style="display: inline-block; vertical-align: top; width: calc(100% - 28px);">${item.replace(/^[-*]\s*/, '')}</div>
+          <div style="display: inline-block; vertical-align: top; width: calc(100% - 28px);">${renderedItem}</div>
         </div>`;
       }).join('');
       return `<div style="padding: 8px 0;">${timelineItems}</div>`;
@@ -306,7 +396,11 @@ function generateHighlightHtml(component: ParsedLayoutComponent, primaryColor: s
         const cellStyle = isHeader ?
           `background: ${primaryColor}; color: #fff; padding: 12px; font-weight: bold;` :
           `padding: 12px; border: 1px solid #e8e8e8;`;
-        const cells = cols.map(col => `<td style="${cellStyle}">${col}</td>`).join('');
+        // Render each cell's markdown
+        const cells = cols.map(col => {
+          const renderedCell = markdownToHtmlLocal(col);
+          return `<td style="${cellStyle}">${renderedCell}</td>`;
+        }).join('');
         return `<tr>${cells}</tr>`;
       }).join('');
       return `<table style="width: 100%; border-collapse: collapse; margin: 16px 0;">${rows}</table>`;
@@ -373,10 +467,13 @@ function generateButtonHtml(component: ParsedLayoutComponent, primaryColor: stri
     .map(([k, v]) => `${camelToKebab(k)}: ${v}`)
     .join('; ');
 
+  // Render button text through markdown (in case it contains formatting)
+  const renderedText = text ? markdownToHtmlLocal(text).replace(/^<p>|<\/p>$/g, '') : markdownToHtmlLocal(component.content).replace(/^<p>|<\/p>$/g, '');
+
   const href = url ? `href="${url}"` : '';
   const tag = url ? 'a' : 'div';
 
-  return `<${tag} ${href} style="${styleAttr}">${text}</${tag}>`;
+  return `<${tag} ${href} style="${styleAttr}">${renderedText}</${tag}>`;
 }
 
 /**
