@@ -1,9 +1,8 @@
 # 墨排 (Mopai)
 
-- 说明：经测试，此种解析方式行不通，放弃此项目，导出格式微信公众号无法复原排版、显示界面如下
-![alt text](assets/image.png)
-
 > 本地运行的浏览器端 Markdown 编辑器，一键生成微信兼容 HTML，支持 AI 智能优化排版
+
+**设计理念**：采用纯 HTML + 内嵌样式，确保微信公众号完美兼容
 
 ![Next.js](https://img.shields.io/badge/Next.js-14.2-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
@@ -23,24 +22,6 @@
 - 工具栏快捷插入：粗体、斜体、标题、引用、列表、链接、图片、代码块
 - 光标自动定位到插入内容
 - 字数统计实时显示
-
-### 布局组件支持 🎨
-支持丰富的布局组件语法，一键生成精美排版：
-
-| 组件类型 | 语法示例 | 说明 |
-|---------|---------|------|
-| **信息框** | `:::tip 内容 :::` | 支持 tip/warning/success/error/note/quote |
-| **卡片** | `:::card title="标题" 内容 :::` | 支持 default/primary/gradient/shadow/bordered/glass 变体 |
-| **编号列表** | `:::numbered\n- 第一项\n- 第二项\n:::` | 自动编号圆圈，支持 Markdown 格式 |
-| **流程步骤** | `:::process\n- 第一步\n- 第二步\n:::` | 垂直流程，带箭头连接 |
-| **时间线** | `:::timeline\n- 2020年\n- 2021年\n:::` | 垂直时间线样式 |
-| **信息提示** | `:::callout title="标题" 内容 :::` | 蓝色边框提示框 |
-| **对比表格** | `:::comparison\n列A \| 列B\n值1 \| 值2\n:::` | 自动生成对比表格 |
-| **分割线** | `---style=gradient---` | 支持 solid/dashed/dotted/gradient 样式 |
-| **按钮** | `:::button url="#" text="点击" :::` | 支持多种样式变体 |
-| **徽章** | `:::badge text="NEW" variant="filled" :::` | inline 徽章元素 |
-| **进度条** | `:::progress percent="75" :::` | 可配置进度和颜色 |
-| **间距** | `:::spacer height="40" :::` | 垂直间距占位 |
 
 ### 样式自定义
 - **字体大小**：14-20px 可调
@@ -97,7 +78,6 @@ wechat/
 │   ├── TemplateSelector.tsx  # 风格模板选择器
 │   ├── TemplateCard.tsx      # 模板卡片组件
 │   ├── TemplateEditor.tsx    # 模板编辑器
-│   ├── EnhancedTextarea.tsx  # 增强文本输入框
 │   ├── TemplateVersionHistory.tsx # 版本历史弹窗
 │   ├── TemplateShareModal.tsx     # 模板分享弹窗
 │   ├── TemplateImportModal.tsx    # 模板导入弹窗
@@ -114,11 +94,13 @@ wechat/
 ├── lib/                      # 工具库
 │   ├── storage.ts            # localStorage 操作封装
 │   ├── templateStorage.ts    # 模板存储操作
-│   ├── markdown.ts           # Markdown 解析配置
-│   ├── wechatStyle.ts        # 微信样式生成器
+│   ├── markdown.ts           # Markdown 基础解析（marked + DOMPurify）
+│   ├── wechatStyle.ts        # 微信样式生成器（字体、行距、颜色）
+│   ├── templateLayouts.ts    # 模板布局配置
+│   ├── layoutComponents.ts   # 布局组件库（参考用，生成内嵌样式HTML）
 │   ├── prompts/             # AI 提示词模板
-│   │   └── layoutPrompts.ts
-│   └── utils.ts              # 工具函数
+│   │   └── layoutPrompts.ts # HTML 内嵌样式指南
+│   └── utils.ts             # 工具函数
 │
 ├── types/                    # TypeScript 类型定义
 │   ├── index.ts              # 基础类型（Article, Settings 等）
@@ -194,10 +176,42 @@ AI_MAX_TOKENS=8000
 ### 基础编辑
 
 1. **新建文章**：点击「新建」按钮创建新文章
-2. **编辑内容**：左侧编辑器输入 Markdown
+2. **编辑内容**：左侧编辑器输入 Markdown 或 HTML
 3. **实时预览**：右侧实时显示微信样式
 4. **插入语法**：使用工具栏快捷插入 Markdown 语法
 5. **自动保存**：停止输入 1 秒后自动保存
+
+### HTML 样式指南
+
+项目使用**纯 HTML + 内嵌样式**，确保与微信公众号完美兼容。AI 会自动生成带样式的 HTML，你也可以手动编写：
+
+#### 信息框示例
+```html
+<div style="background-color: #f0f9ff; border-left: 4px solid #4a90e2; padding: 15px; border-radius: 0 8px 8px 0; margin: 10px 0;">
+  <strong style="font-size: 1.1em;">💡 提示：</strong><br>
+  这里是提示信息内容...
+</div>
+```
+
+#### 卡片示例
+```html
+<div style="border: 1px solid #e8e8e8; border-radius: 8px; padding: 16px; margin: 12px 0; background-color: #ffffff;">
+  <strong style="font-size: 1.1em; display: block; margin-bottom: 8px;">卡片标题</strong>
+  卡片内容...
+</div>
+```
+
+#### 步骤列表示例
+```html
+<div style="margin: 15px 0;">
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">✅</span> 步骤一：准备工作
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">⏳</span> 步骤二：执行操作
+  </div>
+</div>
+```
 
 ### 样式调整
 
@@ -216,9 +230,15 @@ AI_MAX_TOKENS=8000
 
 1. 点击「AI优化」按钮
 2. 选择优化风格模板（简约/商务/活泼/学术/杂志）或自定义模板
-3. AI 流式生成优化内容
+3. AI 会自动生成带内嵌样式的 HTML
 4. 预览对比优化效果
 5. 点击「应用优化」或选择历史版本
+
+**AI 输出特点**：
+- 直接生成带内嵌 `style` 属性的 HTML
+- 所有样式都兼容微信公众号限制
+- 不使用 CSS 渐变、rgba、box-shadow 等不支持的属性
+- 使用十六进制颜色值（#ffffff）
 
 ### 模板管理 🎨
 
@@ -233,11 +253,17 @@ AI_MAX_TOKENS=8000
 2. 填写基本信息（图标、名称、描述）
 3. 配置提示词：
    - **系统提示词**：定义 AI 角色和风格
-   - **布局指导**：指定使用的布局组件
-   - **示例输出**：提供参考示例
-4. 设置布局偏好（卡片样式、信息框、重点区域等）
-5. 配置 AI 参数（可选）
-6. 预览并保存
+   - **布局指导**：指定使用的 HTML 样式模式（信息框、卡片、步骤列表等）
+   - **示例输出**：提供参考 HTML 示例
+4. 配置 AI 参数（可选）
+5. 预览并保存
+
+**提示词指南**：
+- AI 直接生成带内嵌 `style` 属性的 HTML
+- 所有样式使用十六进制颜色值（#ffffff）
+- 使用 `display: flex` 实现步骤列表和时间线
+- 使用 `table` 标签实现对比表格
+- 避免使用 `linear-gradient`、`box-shadow`、`overflow`、`rgba` 等微信不支持的属性
 
 **模板操作**
 - **编辑**：修改现有模板
@@ -253,14 +279,46 @@ AI_MAX_TOKENS=8000
 ### 添加新的优化风格
 
 1. 在 `types/ai.ts` 中添加新的 `TemplateId` 类型
-2. 在 `TEMPLATES` 中添加模板配置
-3. 在 `app/api/optimize/route.ts` 的 `getOptimizePrompt` 函数中添加对应的 prompt 模板
+2. 在 `TEMPLATES` 中添加模板配置（包含 `exampleOutput` 的 HTML 示例）
+3. 在 `lib/prompts/layoutPrompts.ts` 的 `getTemplateLayoutPrompt` 函数中添加对应的 prompt 模板
+4. 在 `lib/templateLayouts.ts` 中添加模板的配色和 emoji 配置
 
 ### 添加新的大模型支持
 
 1. 在 `types/ai.ts` 中添加新的 `AIProvider`
 2. 在 `PROVIDER_CONFIGS` 中添加配置
 3. 如需特殊处理，在 `app/api/optimize/route.ts` 中添加适配逻辑
+
+### 自定义 HTML 样式
+
+所有样式都通过内嵌 `style` 属性实现，确保微信兼容：
+
+**信息框样式**
+```html
+<div style="background-color: #f0f9ff; border-left: 4px solid #4a90e2; padding: 15px; border-radius: 0 8px 8px 0; margin: 10px 0;">
+  内容
+</div>
+```
+
+**卡片样式**
+```html
+<div style="border: 1px solid #e8e8e8; border-radius: 8px; padding: 16px; margin: 12px 0; background-color: #ffffff;">
+  内容
+</div>
+```
+
+**步骤列表**
+```html
+<div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+  <span style="margin-right: 8px;">✅</span> 步骤内容
+</div>
+```
+
+**注意**：微信公众号不支持以下 CSS 属性
+- `linear-gradient`（使用纯色代替）
+- `box-shadow`（使用边框代替）
+- `overflow: hidden`
+- `rgba` 颜色（使用十六进制颜色代替）
 
 ### localStorage 数据结构
 
@@ -319,9 +377,9 @@ Key: "mopai_templates"
       "name": "科技风格",
       "description": "适合科技类内容的排版",
       "icon": "🚀",
-      "systemPrompt": "你是一个专业的...",
-      "layoutPrompt": "## 推荐组件...",
-      "exampleOutput": "# 标题...",
+      "systemPrompt": "你是一个专业的排版助手...",
+      "layoutPrompt": "## 推荐样式...",
+      "exampleOutput": "<div style=\"...\">...</div>",
       "features": ["卡片", "信息框"],
       "source": "custom",
       "createdAt": 1707654321000,

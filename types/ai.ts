@@ -167,27 +167,35 @@ export const TEMPLATES: Record<TemplateId, TemplateConfig> = {
     systemPrompt: '你是一个专业的公众号排版优化助手，擅长将内容优化为简约清晰风格。',
     exampleOutput: `# 标题
 
----
+<p>简要介绍文章主题...</p>
 
-## 章节标题
+<hr>
 
-:::tip
-提示信息
-:::
+<h2>章节标题</h2>
 
-正文内容，**重点词汇加粗**。
+<div style="background-color: #f0f9ff; border-left: 4px solid #4a90e2; padding: 15px; border-radius: 0 8px 8px 0; margin: 10px 0;">
+  <strong style="font-size: 1.1em;">提示信息</strong>
+</div>
 
----
+<p>正文内容，<strong>重点词汇加粗</strong>。</p>
 
-## 另一个章节
+<hr>
 
-### 子章节
+<h2>另一个章节</h2>
 
-:::numbered
-- 要点一
-- 要点二
-- 要点三
-:::`,
+<h3>子章节</h3>
+
+<div style="margin: 15px 0;">
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">✅</span> 要点一
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">✅</span> 要点二
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">✅</span> 要点三
+  </div>
+</div>`,
   },
   business: {
     id: 'business',
@@ -198,36 +206,49 @@ export const TEMPLATES: Record<TemplateId, TemplateConfig> = {
     systemPrompt: '你是一个专业的公众号排版优化助手，擅长将内容优化为商务专业风格。',
     exampleOutput: `# 文章标题
 
-:::card variant="bordered" title="摘要"
-本期聚焦：核心主题概览
-:::
+<div style="border: 2px solid #1890ff; border-radius: 8px; padding: 16px; margin: 12px 0; background-color: #f7fbff;">
+  <strong style="font-size: 1.1em; display: block; margin-bottom: 8px; color: #1890ff;">摘要</strong>
+  本期聚焦：核心主题概览
+</div>
 
----
+<hr>
 
-## 01 前言
+<h2>01 前言</h2>
 
-简要介绍文章背景和目的...
+<p>简要介绍文章背景和目的...</p>
 
----
+<hr>
 
-## 02 核心观点
+<h2>02 核心观点</h2>
 
-:::numbered
-- 观点一：详细说明
-- 观点二：详细说明
-- 观点三：详细说明
-:::
+<div style="margin: 15px 0;">
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">1️⃣</span> 观点一：详细说明
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">2️⃣</span> 观点二：详细说明
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">3️⃣</span> 观点三：详细说明
+  </div>
+</div>
 
-:::comparison
-传统方案 | 创新方案
-特点说明 | 特点说明
-:::
+<table style="width: 100%; border-collapse: collapse; margin: 12px 0;">
+  <tr>
+    <th style="background-color: #1890ff; color: #fff; padding: 12px; font-weight: bold;">传统方案</th>
+    <th style="background-color: #1890ff; color: #fff; padding: 12px; font-weight: bold;">创新方案</th>
+  </tr>
+  <tr>
+    <td style="padding: 12px; border: 1px solid #e8e8e8;">特点说明</td>
+    <td style="padding: 12px; border: 1px solid #e8e8e8;">特点说明</td>
+  </tr>
+</table>
 
----
+<hr>
 
-## 03 结语
+<h2>03 结语</h2>
 
-总结性陈述...`,
+<p>总结性陈述...</p>`,
   },
   lively: {
     id: 'lively',
@@ -238,35 +259,42 @@ export const TEMPLATES: Record<TemplateId, TemplateConfig> = {
     systemPrompt: '你是一个专业的公众号排版优化助手，擅长将内容优化为活泼有趣风格。',
     exampleOutput: `# 🎯 标题
 
-:::card variant="gradient" title="💡 开篇"
-吸引人的开头...
-:::
+<div style="background-color: #f0f9ff; border-left: 4px solid #4a90e2; padding: 15px; border-radius: 0 8px 8px 0; margin: 10px 0;">
+  <strong style="font-size: 1.2em;">💡 开篇</strong><br>
+  吸引人的开头...
+</div>
 
----
+<hr>
 
-## 📖 01 章节标题
+<h2>📖 01 章节标题</h2>
 
-正文内容... ✨
+<p>正文内容... ✨</p>
 
-:::warning
-⚠️ 注意：重要提醒
-:::
+<div style="background-color: #fff9db; border-left: 4px solid #ffc107; padding: 12px 15px; margin: 10px 0; border-radius: 0 6px 6px 0;">
+  ⚠️ <strong>注意：</strong> 重要提醒
+</div>
 
----
+<hr>
 
-:::process
-- 步骤一：开始
-- 步骤二：进行中
-- 步骤三：完成
-:::
+<div style="margin: 15px 0;">
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">✅</span> 步骤一：开始
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">⏳</span> 步骤二：进行中
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">🎉</span> 步骤三：完成
+  </div>
+</div>
 
----
+<hr>
 
-## 💬 互动时间
+<h2>💬 互动时间</h2>
 
-你有什么想法？欢迎在评论区分享！
+<p>你有什么想法？欢迎在评论区分享！</p>
 
-👍 觉得有用就点个赞吧！`,
+<p>👍 觉得有用就点个赞吧！</p>`,
   },
   academic: {
     id: 'academic',
@@ -277,49 +305,55 @@ export const TEMPLATES: Record<TemplateId, TemplateConfig> = {
     systemPrompt: '你是一个专业的公众号排版优化助手，擅长将内容优化为学术严谨风格。',
     exampleOutput: `# 文章标题
 
-:::card variant="bordered" title="摘要"
-**摘要**：简要概述研究内容和结论...
+<div style="border: 3px double #d4d4d4; border-radius: 8px; padding: 16px; margin: 12px 0; background-color: #fafafa;">
+  <strong style="font-size: 1.1em; display: block; margin-bottom: 12px;">摘要</strong>
+  <strong>摘要</strong>：简要概述研究内容和结论...<br><br>
+  <strong>关键词</strong>：关键词1、关键词2、关键词3
+</div>
 
-**关键词**：关键词1、关键词2、关键词3
-:::
+<hr>
 
----
+<h2>01 引言</h2>
 
-## 01 引言
+<p>研究背景和目的...</p>
 
-研究背景和目的...
+<div style="background-color: #fafafa; border-left: 4px solid #8c8c8c; padding: 12px 15px; margin: 10px 0; border-radius: 0 6px 6px 0;">
+  📝 <strong>术语定义：</strong> 重要术语的学术定义
+</div>
 
-:::note
-📝 **术语定义**：重要术语的学术定义
-:::
+<hr>
 
----
+<h2>02 文献综述</h2>
 
-## 02 文献综述
+<div style="background-color: #f9f0ff; border-left: 4px solid #722ed1; padding: 15px; margin: 10px 0; border-radius: 0 8px 8px 0;">
+  "引用的重要观点"
+</div>
 
-:::quote
-"引用的重要观点"
-:::
+<hr>
 
----
+<h2>03 研究方法</h2>
 
-## 03 研究方法
+<div style="margin: 15px 0;">
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">📊</span> 数据收集
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">📈</span> 数据分析
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">✓</span> 结果验证
+  </div>
+</div>
 
-:::process
-- 数据收集
-- 数据分析
-- 结果验证
-:::
+<hr>
 
----
+<h2>04 结论</h2>
 
-## 04 结论
+<p>研究总结...</p>
 
-研究总结...
-
-:::note
-**启示**：对未来研究的启示
-:::`,
+<div style="background-color: #fafafa; border-left: 4px solid #8c8c8c; padding: 12px 15px; margin: 10px 0; border-radius: 0 6px 6px 0;">
+  📝 <strong>启示：</strong> 对未来研究的启示
+</div>`,
   },
   magazine: {
     id: 'magazine',
@@ -330,40 +364,49 @@ export const TEMPLATES: Record<TemplateId, TemplateConfig> = {
     systemPrompt: '你是一个专业的公众号排版优化助手，擅长将内容优化为杂志精美风格。',
     exampleOutput: `# 文章标题
 
----style=gradient---
+<div style="background-color: #f9f0ff; border-left: 4px solid #722ed1; padding: 15px; margin: 10px 0; border-radius: 0 8px 8px 0;">
+  "导语：用一两句话概括文章精华，吸引读者继续阅读"
+</div>
 
-:::quote
-"导语：用一两句话概括文章精华，吸引读者继续阅读"
-:::
+<hr>
 
----
+<h2>第一章：章节标题</h2>
 
-## 第一章：章节标题
+<div style="border: 2px solid #1890ff; border-radius: 8px; padding: 16px; margin: 12px 0; background-color: #f7fbff;">
+  <strong style="font-size: 1.1em; display: block; margin-bottom: 8px; color: #1890ff;">💡 核心观点</strong>
+  正文内容...
+</div>
 
-:::card variant="shadow" title="核心观点"
-正文内容...
-:::
+<hr>
 
----
+<h3>关键洞察</h3>
 
-### 关键洞察
+<div style="border: 2px solid #1890ff; background: #f0f9ff; border-radius: 8px; padding: 20px; margin: 20px 0;">
+  <strong style="font-size: 1.1em; display: block; margin-bottom: 12px; color: #1890ff;">为什么重要</strong>
+  解释内容的重要性
+</div>
 
-:::callout title="为什么重要"
-解释内容的重要性
-:::
+<hr>
 
----
+<div style="margin: 15px 0;">
+  <div style="display: flex; align-items: baseline; margin-bottom: 12px;">
+    <span style="min-width: 100px; color: #666; font-size: 14px;">起源</span>
+    <span>开始的故事</span>
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 12px;">
+    <span style="min-width: 100px; color: #666; font-size: 14px;">转折</span>
+    <span>关键时刻</span>
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 12px;">
+    <span style="min-width: 100px; color: #666; font-size: 14px;">现在</span>
+    <span>当前的状态</span>
+  </div>
+</div>
 
-:::timeline
-- 起源：开始的故事
-- 转折：关键时刻
-- 现在：当前的状态
-:::
+<hr>
 
----style=gradient---
+<h2>延伸阅读</h2>
 
-## 延伸阅读
-
-推荐相关内容链接或书籍`,
+<p>推荐相关内容链接或书籍</p>`,
   },
 };

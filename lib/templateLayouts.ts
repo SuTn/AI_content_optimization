@@ -1,173 +1,135 @@
 /**
  * Template-specific layout configurations
- * Defines the preferred layout components and styling for each template
+ * Defines the preferred styling options for each template
  */
 
-import type { TemplateLayoutConfig, TemplateId } from '@/types/layout';
+import type { TemplateId } from '@/types/layout';
 
 /**
- * Template layout configurations
+ * Template layout configurations (simplified)
  */
-export const TEMPLATE_LAYOUTS: Record<TemplateId, TemplateLayoutConfig> = {
+export const TEMPLATE_LAYOUTS: Record<TemplateId, {
+  useEmojiDecorations: boolean;
+  primaryColor: string;
+  colorSchemes: string[];
+}> = {
   simple: {
-    preferredCardVariants: ['default'],
-    preferredInfoBoxTypes: ['note', 'tip'],
-    preferredHighlightTypes: ['numbered'],
-    preferredDividerStyles: ['solid'],
-    defaultComponents: [],
     useEmojiDecorations: false,
-    useGradients: false,
+    primaryColor: '#333333',
+    colorSchemes: ['#f0f9ff', '#fafafa'],
   },
 
   business: {
-    preferredCardVariants: ['bordered', 'primary'],
-    preferredInfoBoxTypes: ['tip', 'note', 'quote'],
-    preferredHighlightTypes: ['numbered', 'process', 'comparison'],
-    preferredDividerStyles: ['solid', 'dashed'],
-    defaultComponents: [
-      {
-        type: 'infobox',
-        config: {
-          type: 'tip',
-          title: '核心要点',
-        },
-      },
-    ],
     useEmojiDecorations: false,
-    useGradients: false,
+    primaryColor: '#1890ff',
+    colorSchemes: ['#f0f9ff', '#f7fbff', '#f9f0ff'],
   },
 
   lively: {
-    preferredCardVariants: ['gradient', 'shadow', 'primary'],
-    preferredInfoBoxTypes: ['tip', 'warning', 'success'],
-    preferredHighlightTypes: ['callout', 'numbered'],
-    preferredDividerStyles: ['dashed', 'gradient'],
-    defaultComponents: [
-      {
-        type: 'infobox',
-        config: {
-          type: 'tip',
-          title: '小贴士',
-        },
-      },
-      {
-        type: 'divider',
-        config: {
-          style: 'dashed',
-        },
-      },
-    ],
     useEmojiDecorations: true,
-    useGradients: true,
+    primaryColor: '#ff6b6b',
+    colorSchemes: ['#f0f9ff', '#fff9db', '#f0fdf4'],
   },
 
   academic: {
-    preferredCardVariants: ['bordered', 'default'],
-    preferredInfoBoxTypes: ['note', 'quote'],
-    preferredHighlightTypes: ['timeline', 'comparison'],
-    preferredDividerStyles: ['solid'],
-    defaultComponents: [
-      {
-        type: 'card',
-        config: {
-          variant: 'bordered',
-          title: '摘要',
-        },
-      },
-    ],
     useEmojiDecorations: false,
-    useGradients: false,
+    primaryColor: '#5c4b8a',
+    colorSchemes: ['#fafafa', '#f9f0ff'],
   },
 
   magazine: {
-    preferredCardVariants: ['shadow', 'glass', 'gradient'],
-    preferredInfoBoxTypes: ['quote', 'tip'],
-    preferredHighlightTypes: ['callout', 'timeline'],
-    preferredDividerStyles: ['gradient', 'solid'],
-    defaultComponents: [
-      {
-        type: 'infobox',
-        config: {
-          type: 'quote',
-          title: '导语',
-        },
-      },
-      {
-        type: 'divider',
-        config: {
-          style: 'gradient',
-        },
-      },
-    ],
     useEmojiDecorations: true,
-    useGradients: true,
+    primaryColor: '#e91e63',
+    colorSchemes: ['#f9f0ff', '#f0f9ff'],
   },
 };
 
 /**
  * Get layout configuration for a template
  */
-export function getTemplateLayoutConfig(templateId: TemplateId): TemplateLayoutConfig {
+export function getTemplateLayoutConfig(templateId: TemplateId): {
+  useEmojiDecorations: boolean;
+  primaryColor: string;
+  colorSchemes: string[];
+} {
   return TEMPLATE_LAYOUTS[templateId] || TEMPLATE_LAYOUTS.simple;
 }
 
 /**
- * Get default primary color for a template
+ * Get primary color for a template
  */
 export function getTemplatePrimaryColor(templateId: TemplateId): string {
-  const colors: Record<TemplateId, string> = {
-    simple: '#333333',
-    business: '#1890ff',
-    lively: '#ff6b6b',
-    academic: '#5c4b8a',
-    magazine: '#e91e63',
-  };
-  return colors[templateId] || colors.simple;
+  return getTemplateLayoutConfig(templateId).primaryColor;
 }
 
 /**
- * Get markdown syntax examples for a template
+ * Get HTML style examples for a template
  */
-export function getTemplateSyntaxExamples(templateId: TemplateId): string {
+export function getTemplateHtmlExamples(templateId: TemplateId): string {
   const config = getTemplateLayoutConfig(templateId);
   const primaryColor = getTemplatePrimaryColor(templateId);
 
   let examples = '';
 
-  // Card examples
-  if (config.preferredCardVariants.length > 0) {
-    const variant = config.preferredCardVariants[0];
-    examples += `\n## 卡片示例\n\n:::card variant="${variant}" title="卡片标题"\n卡片内容\n:::\n\n`;
+  // Info box example
+  if (config.useEmojiDecorations) {
+    examples += `
+## 信息框示例
+
+\`\`\`html
+<div style="background-color: #f0f9ff; border-left: 4px solid #4a90e2; padding: 15px; border-radius: 0 8px 8px 0; margin: 10px 0;">
+  <strong style="font-size: 1.1em;">💡 提示：</strong><br>
+  这里是提示信息内容...
+</div>
+\`\`\`
+
+`;
+  } else {
+    examples += `
+## 信息框示例
+
+\`\`\`html
+<div style="background-color: ${config.colorSchemes[0]}; border-left: 4px solid ${primaryColor}; padding: 15px; border-radius: 0 8px 8px 0; margin: 10px 0;">
+  <strong style="font-size: 1.1em;">提示：</strong><br>
+  这里是提示信息内容...
+</div>
+\`\`\`
+
+`;
   }
 
-  // Info box examples
-  if (config.preferredInfoBoxTypes.length > 0) {
-    const type = config.preferredInfoBoxTypes[0];
-    const titles: Record<string, string> = {
-      tip: '提示',
-      warning: '注意',
-      success: '成功',
-      error: '错误',
-      note: '笔记',
-      quote: '引用',
-    };
-    examples += `:::${type}\n${titles[type] || '信息'}内容\n:::\n\n`;
-  }
+  // Card example
+  examples += `
+## 卡片示例
 
-  // Highlight examples
-  if (config.preferredHighlightTypes.includes('numbered')) {
-    examples += `:::numbered\n- 第一点\n- 第二点\n- 第三点\n:::\n\n`;
-  }
+\`\`\`html
+<div style="border: 1px solid #e8e8e8; border-radius: 8px; padding: 16px; margin: 12px 0; background-color: #ffffff;">
+  <strong style="font-size: 1.1em; display: block; margin-bottom: 8px;">卡片标题</strong>
+  卡片内容...
+</div>
+\`\`\`
 
-  if (config.preferredHighlightTypes.includes('process')) {
-    examples += `:::process\n- 步骤一\n- 步骤二\n- 步骤三\n:::\n\n`;
-  }
+`;
 
-  // Divider examples
-  if (config.preferredDividerStyles.length > 0) {
-    const style = config.preferredDividerStyles[0];
-    examples += `---style=${style}---\n\n`;
-  }
+  // Steps example
+  examples += `
+## 步骤列表示例
+
+\`\`\`html
+<div style="margin: 15px 0;">
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">✅</span> 第一步：准备工作
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">⏳</span> 第二步：执行操作
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">🎉</span> 第三步：完成验证
+  </div>
+</div>
+\`\`\`
+
+`;
 
   return examples;
 }
@@ -177,86 +139,31 @@ export function getTemplateSyntaxExamples(templateId: TemplateId): string {
  */
 export function getLayoutPrompt(templateId: TemplateId): string {
   const config = getTemplateLayoutConfig(templateId);
-  const examples = getTemplateSyntaxExamples(templateId);
+  const primaryColor = getTemplatePrimaryColor(templateId);
+  const examples = getTemplateHtmlExamples(templateId);
 
-  return `请使用以下布局组件语法来优化内容结构：
+  const styleName = templateId === 'simple' ? '简约风格' :
+    templateId === 'business' ? '商务风格' :
+    templateId === 'lively' ? '活泼风格' :
+    templateId === 'academic' ? '学术风格' : '杂志风格';
 
-## 可用布局组件
+  return `# ${styleName}排版指南
 
-### 卡片 (Card)
-\`\`\`markdown
-:::card variant="default|primary|gradient|shadow|bordered|glass" title="标题"
-卡片内容
-:::
-\`\`\`
+## 配色方案
+- 主色调：${primaryColor}
+- 背景色系：${config.colorSchemes.join(', ')}
 
-### 信息框 (Info Box)
-\`\`\`markdown
-:::tip
-提示信息
-:::
+## 使用建议
+${config.useEmojiDecorations ? '- 适当使用 emoji 增强表达\n- 使用轻松友好的语调' : '- 避免使用 emoji，保持专业\n- 使用简洁的配色方案'}
 
-:::warning
-警告信息
-:::
+## HTML 示例
 
-:::success
-成功信息
-:::
-
-:::error
-错误信息
-:::
-
-:::note
-笔记内容
-:::
-
-:::quote
-引用内容
-:::
-\`\`\`
-
-### 重点区域 (Highlight)
-\`\`\`markdown
-:::numbered
-- 第一点
-- 第二点
-:::
-
-:::process
-- 步骤一
-- 步骤二
-:::
-
-:::timeline
-- 事件一
-- 事件二
-:::
-
-:::callout title="标题"
-内容
-:::
-\`\`\`
-
-### 分割线 (Divider)
-\`\`\`markdown
----style=solid---
----style=dashed---
----style=dotted---
----style=gradient---
----style=dashed text="文字"---
-\`\`\`
-
-## ${templateId === 'simple' ? '简约风格' : templateId === 'business' ? '商务风格' : templateId === 'lively' ? '活泼风格' : templateId === 'academic' ? '学术风格' : '杂志风格'}示例
-
-${examples || '使用简洁的 Markdown 格式，保持内容清晰易读。'}
+${examples}
 
 ## 注意事项
-1. 根据内容类型选择合适的布局组件
-2. 不要过度使用布局组件，保持内容简洁
-3. 确保布局组件服务于内容表达，而非装饰
-4. ${config.useEmojiDecorations ? '适当使用 emoji 增强表达' : '避免使用 emoji，保持专业'}
-5. ${config.useGradients ? '可以使用渐变效果增强视觉吸引力' : '使用简洁的配色方案'}
+1. 所有样式使用内嵌 style 属性
+2. 确保兼容微信公众号的 HTML 限制
+3. 使用十六进制颜色值（#ffffff）
+4. 避免使用 CSS 渐变、box-shadow 等不支持的属性
 `;
 }

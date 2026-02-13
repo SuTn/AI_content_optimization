@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, RotateCcw, Check, Copy } from 'lucide-react';
 import { OptimizedVersion } from '@/types/ai';
-import { parseMarkdown, parseMarkdownWithLayout } from '@/lib/markdown';
+import { parseMarkdown } from '@/lib/markdown';
 import { generateWechatHtml } from '@/lib/wechatStyle';
 import { Settings } from '@/types';
 
@@ -36,11 +36,9 @@ export function AIPreviewModal({
 
   useEffect(() => {
     if (previewRef.current) {
-      // Use layout-aware parsing for optimized content
+      // Use basic markdown parsing
       const content = showOriginal ? originalContent : optimizedContent;
-      const html = showOriginal
-        ? parseMarkdown(content)
-        : parseMarkdownWithLayout(content, settings.primaryColor);
+      const html = parseMarkdown(content);
       const styledHtml = generateWechatHtml(html, settings);
       previewRef.current.innerHTML = styledHtml;
     }

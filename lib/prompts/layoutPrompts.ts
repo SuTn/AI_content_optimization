@@ -1,131 +1,172 @@
 /**
  * AI Prompts for layout generation
- * Provides template-specific guidance for AI to generate structured content with layout components
+ * Provides template-specific guidance for AI to generate structured content with HTML inline styles
  */
 
 import type { TemplateId, AnyTemplateId } from '@/types/ai';
 import { getTemplateById } from '@/lib/templateStorage';
 
 /**
- * Base layout syntax documentation for AI
+ * HTML inline style guide for AI
+ * This guide teaches AI to generate WeChat-compatible HTML with inline styles
  */
-const LAYOUT_SYNTAX_DOCS = `# 可用布局组件语法
+const HTML_STYLE_GUIDE = `# HTML 内嵌样式指南
 
-## ⚠️ 重要格式要求
+## 样式原则
 
-1. **列表格式**：在布局组件内使用连字符（-）开头的无序列表，不要使用 A. B. C. 或 1. 2. 3. 格式
-2. **标签格式**：文章末尾的标签应该使用普通文本格式，不要使用井号（#）前缀
-3. **组件内容**：组件内的内容使用标准 Markdown 语法，包括加粗、斜体、代码等
+1. **所有样式必须使用内嵌 \`style\` 属性**
+2. **不使用外部 CSS 类或自定义标签**
+3. **确保兼容微信公众号的 HTML 限制**
 
-## 卡片组件 (Card)
-用于包装相关内容，提供视觉分组
+## 可用的样式模式
 
-\`\`\`markdown
-:::card variant="default" title="标题"
-卡片内的**加粗内容**和*斜体内容*
-:::
+### 信息框（Info Box）
 
-:::card variant="primary" title="重要提示"
-使用品牌色边框的卡片
-:::
+使用带边框和背景色的 \`div\` 元素：
 
-:::card variant="gradient" title="渐变卡片"
-带有渐变背景的卡片
-:::
+\`\`\`html
+<!-- 蓝色提示框 -->
+<div style="background-color: #f0f9ff; border-left: 4px solid #4a90e2; padding: 15px; border-radius: 0 8px 8px 0; margin: 10px 0;">
+  <strong style="font-size: 1.1em;">💡 提示：</strong><br>
+  这里是提示信息内容...
+</div>
+
+<!-- 黄色警告框 -->
+<div style="background-color: #fff9db; border-left: 4px solid #ffc107; padding: 12px 15px; margin: 10px 0; border-radius: 0 6px 6px 0;">
+  ⚠️ <strong>注意：</strong> 这里是警告信息
+</div>
+
+<!-- 绿色成功框 -->
+<div style="background-color: #f0fdf4; border-left: 4px solid #22c55e; padding: 12px 15px; margin: 10px 0; border-radius: 0 6px 6px 0;">
+  ✅ <strong>成功：</strong> 操作已完成
+</div>
+
+<!-- 红色错误框 -->
+<div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 15px; margin: 10px 0; border-radius: 0 6px 6px 0;">
+  ✕ <strong>错误：</strong> 发生错误
+</div>
+
+<!-- 灰色笔记框 -->
+<div style="background-color: #fafafa; border-left: 4px solid #8c8c8c; padding: 12px 15px; margin: 10px 0; border-radius: 0 6px 6px 0;">
+  📝 <strong>笔记：</strong> 记录内容
+</div>
+
+<!-- 紫色引用框 -->
+<div style="background-color: #f9f0ff; border-left: 4px solid #722ed1; padding: 15px; margin: 10px 0; border-radius: 0 8px 8px 0;">
+  "这是**引用的金句**内容"
+</div>
 \`\`\`
 
-## 信息框组件 (Info Box)
-用于突出显示提示、警告、笔记等信息
+### 卡片（Card）
 
-\`\`\`markdown
-:::tip
-**提示**：这是重要的提示信息
-:::
+使用带边框和内边距的 \`div\` 元素：
 
-:::warning
-⚠️ **警告**：请注意检查
-:::
+\`\`\`html
+<!-- 默认卡片 -->
+<div style="border: 1px solid #e8e8e8; border-radius: 8px; padding: 16px; margin: 12px 0; background-color: #ffffff;">
+  <strong style="font-size: 1.1em; display: block; margin-bottom: 8px;">卡片标题</strong>
+  卡片内容...
+</div>
 
-:::success
-✓ **成功**：操作完成
-:::
+<!-- 品牌色边框卡片 -->
+<div style="border: 2px solid #1890ff; border-radius: 8px; padding: 16px; margin: 12px 0; background-color: #f7fbff;">
+  <strong style="font-size: 1.1em; display: block; margin-bottom: 8px; color: #1890ff;">重要提示</strong>
+  卡片内容...
+</div>
 
-:::error
-✕ **错误**：出错了
-:::
-
-:::note
-📝 **笔记**：记录内容
-:::
-
-:::quote
-"这是**引用的金句**内容"
-:::
+<!-- 浅色背景卡片 -->
+<div style="border: 1px solid #e8e8e8; border-radius: 8px; padding: 20px; margin: 16px 0; background-color: #fafafa;">
+  <strong style="font-size: 1.1em; display: block; margin-bottom: 12px;">卡片内容</strong>
+  这是浅色背景的卡片样式...
+</div>
 \`\`\`
 
-## 重点区域组件 (Highlight)
-用于展示结构化内容
+### 分割线（Divider）
 
-### 编号列表 (使用 - 开头，不要用数字)
-\`\`\`markdown
-:::numbered
-- 第一点：说明内容
-- 第二点：**重点强调**
-- 第三点：继续说明
-:::
+使用 \`hr\` 或带样式的 \`div\`：
+
+\`\`\`html
+<!-- 实线分割线 -->
+<hr>
+
+<!-- 虚线分割线 -->
+<div style="border-top: 1px dashed #ccc; margin: 20px 0;"></div>
+
+<!-- 点线分割线 -->
+<div style="border-top: 1px dotted #ccc; margin: 20px 0;"></div>
+
+<!-- 带文字的分割线（使用 table） -->
+<table style="width: 100%; margin: 24px 0; border-collapse: collapse;">
+  <tr>
+    <td style="border-top: 1px solid #e8e8e8;"></td>
+    <td style="padding: 0 16px; color: #666; font-size: 14px; white-space: nowrap;">章节标题</td>
+    <td style="border-top: 1px solid #e8e8e8;"></td>
+  </tr>
+</table>
 \`\`\`
 
-### 流程步骤
-\`\`\`markdown
-:::process
-- 第一步：准备工作
-- 第二步：执行操作
-- 第三步：完成验证
-:::
+### 步骤列表（Steps）
+
+使用 flex 布局的 \`div\` 容器：
+
+\`\`\`html
+<div style="margin: 15px 0;">
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">✅</span> 步骤一：准备工作
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">⏳</span> 步骤二：执行操作
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">🎉</span> 步骤三：完成验证
+  </div>
+</div>
 \`\`\`
 
-### 时间线
-\`\`\`markdown
-:::timeline
-- 2020年：项目启动
-- 2021年：产品发布
-- 2022年：用户增长
-:::
+### 时间线（Timeline）
+
+使用类似的 flex 布局：
+
+\`\`\`html
+<div style="margin: 15px 0;">
+  <div style="display: flex; align-items: baseline; margin-bottom: 12px;">
+    <span style="min-width: 100px; color: #666; font-size: 14px;">2020年</span>
+    <span>项目启动</span>
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 12px;">
+    <span style="min-width: 100px; color: #666; font-size: 14px;">2021年</span>
+    <span>产品发布</span>
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 12px;">
+    <span style="min-width: 100px; color: #666; font-size: 14px;">2022年</span>
+    <span>用户增长</span>
+  </div>
+</div>
 \`\`\`
 
-### 引出框
-\`\`\`markdown
-:::callout title="核心观点"
-重要的**核心观点**内容，可以使用markdown格式
-:::
+### 对比表格（Comparison）
+
+使用标准 HTML \`table\`：
+
+\`\`\`html
+<table style="width: 100%; border-collapse: collapse; margin: 12px 0;">
+  <tr>
+    <th style="background-color: #1890ff; color: #fff; padding: 12px; font-weight: bold;">选项 A</th>
+    <th style="background-color: #1890ff; color: #fff; padding: 12px; font-weight: bold;">选项 B</th>
+  </tr>
+  <tr>
+    <td style="padding: 12px; border: 1px solid #e8e8e8;">优点内容</td>
+    <td style="padding: 12px; border: 1px solid #e8e8e8;">优点内容</td>
+  </tr>
+</table>
 \`\`\`
 
-### 对比表格
-\`\`\`markdown
-:::comparison
-选项 A | 选项 B
-**优点1** | **优点1**
-**缺点1** | **缺点1**
-:::
-\`\`\`
+## 微信公众号样式限制
 
-## 分割线组件 (Divider)
-用于分隔不同章节
-
-\`\`\`markdown
----style=solid---
----style=dashed---
----style=dotted---
----style=gradient---
----style=dashed text="章节标题"---
-\`\`\`
-
-## 使用原则
-1. 根据内容类型选择合适的组件
-2. 不要过度使用布局组件（通常3-5个组件即可）
-3. 布局组件应该服务于内容表达，而非纯装饰
-4. 保持整体视觉风格一致
-5. **所有列表使用 - 开头，不要用 A. B. C. 或数字编号**
+- ❌ 不支持：CSS 渐变（linear-gradient）、box-shadow、overflow、rgba 颜色
+- ✅ 支持：内嵌 style 属性、基础 CSS 属性
+- ✅ 使用：十六进制颜色值（#ffffff）
+- ✅ 使用：em、px、% 单位
 `;
 
 /**
@@ -148,7 +189,7 @@ export function getLayoutPrompt(templateId: AnyTemplateId, userContent?: string)
     styleName = templateId === 'simple' ? '简约' : templateId === 'business' ? '商务' : templateId === 'lively' ? '活泼' : templateId === 'academic' ? '学术' : '杂志';
   }
 
-  const basePrompt = `${LAYOUT_SYNTAX_DOCS}
+  const basePrompt = `${HTML_STYLE_GUIDE}
 
 ${templatePrompt}
 
@@ -157,13 +198,6 @@ ${templatePrompt}
   if (userContent) {
     return `${basePrompt}
 
-# 输出格式提醒
-
-在生成内容前，请再次确认：
-- 所有列表使用 \`-\` 开头，不要用 A. B. C. 或 1. 2. 3.
-- 标签使用普通文本，如"相关标签：技术、AI"
-- 组件内可使用 **加粗**、*斜体* 等markdown语法
-
 ---
 
 # 待优化内容
@@ -171,7 +205,7 @@ ${templatePrompt}
 ${userContent}
 
 # 要求
-请根据以上内容和${styleName}风格要求，使用合适的布局组件重新组织和呈现内容。
+请根据以上内容和${styleName}风格要求，使用合适的 HTML 内嵌样式重新组织和呈现内容。
 `;
   }
 
@@ -191,50 +225,56 @@ function getTemplateLayoutPrompt(templateId: TemplateId): string {
 - 简洁的实线分割线
 - 避免过度装饰
 
-## 推荐组件
-- **卡片**: 使用 default 变体
-- **信息框**: tip, note
-- **重点区域**: numbered
-- **分割线**: solid
+## 推荐样式
+- **信息框**: 使用蓝色、灰色提示框
+- **卡片**: 使用默认白色背景卡片
+- **分割线**: 使用标准 hr 标签
+- **配色**: 使用浅灰色系（#f0f9ff, #fafafa）
 
 ## 示例结构
-\`\`\`markdown
-# 文章标题
+\`\`\`html
+<h1>文章标题</h1>
 
-简要介绍文章主题...
+<p>简要介绍文章主题...</p>
 
----
+<hr>
 
-## 主要内容
+<h2>主要内容</h2>
 
-:::tip
-**提示**：这里是重要的提示信息
-:::
+<div style="background-color: #f0f9ff; border-left: 4px solid #4a90e2; padding: 15px; border-radius: 0 8px 8px 0; margin: 10px 0;">
+  <strong style="font-size: 1.1em;">💡 提示：</strong><br>
+  这里是重要的提示信息
+</div>
 
-正文段落使用**加粗**强调重点...
+<p>正文段落使用<strong>加粗</strong>强调重点...</p>
 
----
+<hr>
 
-## 核心要点
+<h2>核心要点</h2>
 
-:::numbered
-- 第一点：**关键内容**说明
-- 第二点：详细解释
-- 第三点：补充信息
-:::
+<div style="margin: 15px 0;">
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">✅</span> 第一点：关键内容说明
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">✅</span> 第二点：详细解释
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">✅</span> 第三点：补充信息
+  </div>
+</div>
 
----
+<hr>
 
-## 总结
+<h2>总结</h2>
 
-总结全文内容...
+<p>总结全文内容...</p>
 \`\`\`
 
 ## 注意事项
 - 保持简洁，避免过度装饰
 - 优先使用基础组件
-- 不要使用渐变和阴影效果
-- 列表使用 - 开头，不要用 A. B. C.
+- 使用浅色配色方案
 `,
 
     business: `# 商务风格排版指南
@@ -245,53 +285,67 @@ function getTemplateLayoutPrompt(templateId: TemplateId): string {
 - 添加摘要和总结
 - 适合展示数据和专业观点
 
-## 推荐组件
-- **卡片**: primary, bordered
-- **信息框**: tip, note, quote
-- **重点区域**: numbered, process, comparison
-- **分割线**: solid, dashed
+## 推荐样式
+- **信息框**: 使用蓝色、紫色提示框和引用框
+- **卡片**: 使用品牌色边框卡片
+- **分割线**: 使用实线或虚线
+- **配色**: 使用专业蓝色系（#1890ff, #f0f9ff）
 
 ## 示例结构
-\`\`\`markdown
-# 文章标题
+\`\`\`html
+<h1>文章标题</h1>
 
-:::card variant="bordered" title="摘要"
-本文概述**核心观点**和主要内容...
-:::
+<div style="border: 2px solid #1890ff; border-radius: 8px; padding: 16px; margin: 12px 0; background-color: #f7fbff;">
+  <strong style="font-size: 1.1em; display: block; margin-bottom: 8px; color: #1890ff;">摘要</strong>
+  本文概述<strong>核心观点</strong>和主要内容...
+</div>
 
----
+<hr>
 
-## 01 前言
+<h2>01 前言</h2>
 
-介绍背景和目的...
+<p>介绍背景和目的...</p>
 
----
+<hr>
 
-## 02 核心观点
+<h2>02 核心观点</h2>
 
-:::numbered
-- 观点一：**详细说明**
-- 观点二：补充解释
-- 观点三：总结提炼
-:::
+<div style="margin: 15px 0;">
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">1️⃣</span> 观点一：详细说明
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">2️⃣</span> 观点二：补充解释
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">3️⃣</span> 观点三：总结提炼
+  </div>
+</div>
 
----
+<hr>
 
-## 03 对比分析
+<h2>03 对比分析</h2>
 
-:::comparison
-传统方案 | 创新方案
-**特点1** | **特点1**
-**优势1** | **优势1**
-**局限性** | **突破点**
-:::
+<table style="width: 100%; border-collapse: collapse; margin: 12px 0;">
+  <tr>
+    <th style="background-color: #1890ff; color: #fff; padding: 12px; font-weight: bold;">传统方案</th>
+    <th style="background-color: #1890ff; color: #fff; padding: 12px; font-weight: bold;">创新方案</th>
+  </tr>
+  <tr>
+    <td style="padding: 12px; border: 1px solid #e8e8e8;"><strong>特点1</strong></td>
+    <td style="padding: 12px; border: 1px solid #e8e8e8;"><strong>特点1</strong></td>
+  </tr>
+  <tr>
+    <td style="padding: 12px; border: 1px solid #e8e8e8;"><strong>优势1</strong></td>
+    <td style="padding: 12px; border: 1px solid #e8e8e8;"><strong>优势1</strong></td>
+  </tr>
+</table>
 
----
+<hr>
 
-## 04 结语
+<h2>04 结语</h2>
 
-总结全文并展望...
-
+<p>总结全文并展望...</p>
 \`\`\`
 
 ## 注意事项
@@ -299,7 +353,6 @@ function getTemplateLayoutPrompt(templateId: TemplateId): string {
 - 添加引用框展示观点
 - 使用表格展示数据
 - 保持专业严谨的语调
-- 列表使用 - 开头格式
 `,
 
     lively: `# 活泼风格排版指南
@@ -307,61 +360,66 @@ function getTemplateLayoutPrompt(templateId: TemplateId): string {
 ## 特点
 - 轻松有趣，视觉丰富
 - 使用 emoji 和图标
-- 渐变和阴影效果
 - 引导互动的结尾
+- 使用彩色信息框
 
-## 推荐组件
-- **卡片**: gradient, shadow, primary
-- **信息框**: tip, warning, success
-- **重点区域**: callout, numbered
-- **分割线**: dashed, gradient
+## 推荐样式
+- **信息框**: 使用蓝色、黄色、绿色彩色信息框
+- **卡片**: 使用品牌色边框卡片
+- **分割线**: 使用虚线
+- **配色**: 使用多彩配色（#f0f9ff, #fff9db, #f0fdf4）
 
 ## 示例结构
-\`\`\`markdown
-# 🎯 文章标题
+\`\`\`html
+<h1>🎯 文章标题</h1>
 
-:::card variant="gradient" title="💡 开篇"
-引人入胜的**开头内容**...
-:::
+<div style="background-color: #f0f9ff; border-left: 4px solid #4a90e2; padding: 15px; border-radius: 0 8px 8px 0; margin: 10px 0;">
+  <strong style="font-size: 1.2em;">💡 开篇</strong><br>
+  引人入胜的<strong>开头内容</strong>...
+</div>
 
----
+<hr>
 
-## 📖 章节标题
+<h2>📖 章节标题</h2>
 
-:::tip
-**小贴士**：实用的提示信息
-:::
+<div style="background-color: #fff9db; border-left: 4px solid #ffc107; padding: 12px 15px; margin: 10px 0; border-radius: 0 6px 6px 0;">
+  ⚠️ <strong>注意：</strong> 实用的小贴士
+</div>
 
-正文内容... ✨ 使用**加粗**强调
+<p>正文内容... ✨ 使用<strong>加粗</strong>强调</p>
 
----
+<hr>
 
-## 🚀 行动步骤
+<h2>🚀 行动步骤</h2>
 
-:::process
-- 第一步：**准备**工作说明
-- 第二步：**执行**详细步骤
-- 第三步：**验证**结果
-:::
+<div style="margin: 15px 0;">
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">✅</span> 第一步：准备工作
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">⏳</span> 第二步：执行操作
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 8px;">
+    <span style="margin-right: 8px;">🎉</span> 第三步：完成验证
+  </div>
+</div>
 
----
+<hr>
 
-## 💬 互动时间
+<h2>💬 互动时间</h2>
 
-你有什么想法？欢迎在评论区分享！
+<p>你有什么想法？欢迎在评论区分享！</p>
 
-👍 觉得有用就点个赞吧！
+<p>👍 觉得有用就点个赞吧！</p>
 
-相关标签：GLM-5、AI智能体、黑科技
+<p>相关标签：GLM-5、AI智能体、黑科技</p>
 \`\`\`
 
 ## 注意事项
 - 适当使用 emoji 增强表达
 - 使用轻松友好的语调
-- 可以使用渐变和阴影效果
+- 使用彩色信息框
 - 添加引导互动的元素
-- 标签使用普通文本格式，不要用#号
-- 列表使用 - 开头
 `,
 
     academic: `# 学术风格排版指南
@@ -372,61 +430,70 @@ function getTemplateLayoutPrompt(templateId: TemplateId): string {
 - 添加摘要和关键词
 - 专业术语注释
 
-## 推荐组件
-- **卡片**: bordered, default
-- **信息框**: note, quote
-- **重点区域**: timeline, comparison
-- **分割线**: solid
+## 推荐样式
+- **信息框**: 使用灰色笔记框和紫色引用框
+- **卡片**: 使用双线边框卡片
+- **分割线**: 使用标准实线
+- **配色**: 使用专业灰色系（#fafafa, #f9f0ff）
 
 ## 示例结构
-\`\`\`markdown
-# 文章标题
+\`\`\`html
+<h1>文章标题</h1>
 
-:::card variant="bordered" title="摘要"
-本研究探讨**核心问题**...
+<div style="border: 3px double #d4d4d4; border-radius: 8px; padding: 16px; margin: 12px 0; background-color: #fafafa;">
+  <strong style="font-size: 1.1em; display: block; margin-bottom: 12px;">摘要</strong>
+  本研究探讨<strong>核心问题</strong>...<br><br>
+  <strong>关键词：</strong>关键词1、关键词2、关键词3
+</div>
 
-**关键词**：关键词1、关键词2、关键词3
-:::
+<hr>
 
----
+<h2>01 引言</h2>
 
-## 01 引言
+<p>研究背景和问题陈述...</p>
 
-研究背景和问题陈述...
+<div style="background-color: #fafafa; border-left: 4px solid #8c8c8c; padding: 12px 15px; margin: 10px 0; border-radius: 0 6px 6px 0;">
+  📝 <strong>术语定义：</strong> 重要概念的学术定义
+</div>
 
-:::note
-📝 **术语定义**：重要概念的学术定义
-:::
+<hr>
 
----
+<h2>02 文献综述</h2>
 
-## 02 文献综述
+<div style="background-color: #f9f0ff; border-left: 4px solid #722ed1; padding: 15px; margin: 10px 0; border-radius: 0 8px 8px 0;">
+  "这是<strong>引用的学术观点</strong>或研究结论"
+</div>
 
-:::quote
-"这是**引用的学术观点**或研究结论"
-:::
+<hr>
 
----
+<h2>03 研究历程</h2>
 
-## 03 研究历程
+<div style="margin: 15px 0;">
+  <div style="display: flex; align-items: baseline; margin-bottom: 12px;">
+    <span style="min-width: 100px; color: #666; font-size: 14px;">2020年</span>
+    <span>相关研究<strong>起步</strong></span>
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 12px;">
+    <span style="min-width: 100px; color: #666; font-size: 14px;">2021年</span>
+    <span>理论<strong>突破</strong></span>
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 12px;">
+    <span style="min-width: 100px; color: #666; font-size: 14px;">2022年</span>
+    <span>实践<strong>应用</strong></span>
+  </div>
+</div>
 
-:::timeline
-- 2020年：相关研究**起步**
-- 2021年：理论**突破**
-- 2022年：实践**应用**
-:::
+<hr>
 
----
+<h2>04 结论</h2>
 
-## 04 结论
+<p>研究总结...</p>
 
-研究总结...
+<div style="background-color: #fafafa; border-left: 4px solid #8c8c8c; padding: 12px 15px; margin: 10px 0; border-radius: 0 6px 6px 0;">
+  📝 <strong>启示：</strong> 对未来研究的启示
+</div>
 
-:::note
-**启示**：对未来研究的启示
-:::
-
-相关研究：学术研究、理论框架
+<p>相关研究：学术研究、理论框架</p>
 \`\`\`
 
 ## 注意事项
@@ -434,8 +501,6 @@ function getTemplateLayoutPrompt(templateId: TemplateId): string {
 - 专业术语首次出现时注释
 - 保持客观中立语调
 - 使用脚注标注数据来源
-- 列表使用 - 开头格式
-- 关键词用普通文本
 `,
 
     magazine: `# 杂志风格排版指南
@@ -446,53 +511,64 @@ function getTemplateLayoutPrompt(templateId: TemplateId): string {
 - 多样化的视觉元素
 - 控制阅读节奏
 
-## 推荐组件
-- **卡片**: shadow, glass, gradient
-- **信息框**: quote, tip
-- **重点区域**: callout, timeline
-- **分割线**: gradient, solid
+## 推荐样式
+- **信息框**: 使用紫色引用框和蓝色提示框
+- **卡片**: 使用品牌色边框卡片
+- **分割线**: 使用实线或带文字的分割线
+- **配色**: 使用优雅配色（#f9f0ff, #f0f9ff）
 
 ## 示例结构
-\`\`\`markdown
-# 文章标题
+\`\`\`html
+<h1>文章标题</h1>
 
-:::quote
-"导语：用一两句话概括**文章精华**内容"
-:::
+<div style="background-color: #f9f0ff; border-left: 4px solid #722ed1; padding: 15px; margin: 10px 0; border-radius: 0 8px 8px 0;">
+  "导语：用一两句话概括<strong>文章精华</strong>内容"
+</div>
 
----style=gradient---
+<hr>
 
-## 第一章：章节标题
+<h2>第一章：章节标题</h2>
 
-:::card variant="shadow" title="核心观点"
-重要观点的**详细阐述**...
-:::
+<div style="border: 2px solid #1890ff; border-radius: 8px; padding: 16px; margin: 12px 0; background-color: #f7fbff;">
+  <strong style="font-size: 1.1em; display: block; margin-bottom: 8px; color: #1890ff;">💡 核心观点</strong>
+  重要观点的<strong>详细阐述</strong>...
+</div>
 
----
+<hr>
 
-### 关键洞察
+<h3>关键洞察</h3>
 
-:::callout title="为什么重要"
-解释**重要性**和影响...
-:::
+<div style="border: 2px solid #1890ff; background: #f0f9ff; border-radius: 8px; padding: 20px; margin: 20px 0;">
+  <strong style="font-size: 1.1em; display: block; margin-bottom: 12px; color: #1890ff;">为什么重要</strong>
+  解释<strong>重要性</strong>和影响...
+</div>
 
----
+<hr>
 
-## 发展历程
+<h2>发展历程</h2>
 
-:::timeline
-- 起源：故事的**开始**
-- 发展：过程中的**转折**
-- 现在：当前的**状态**
-:::
+<div style="margin: 15px 0;">
+  <div style="display: flex; align-items: baseline; margin-bottom: 12px;">
+    <span style="min-width: 100px; color: #666; font-size: 14px;">起源</span>
+    <span>故事的<strong>开始</strong></span>
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 12px;">
+    <span style="min-width: 100px; color: #666; font-size: 14px;">发展</span>
+    <span>过程中的<strong>转折</strong></span>
+  </div>
+  <div style="display: flex; align-items: baseline; margin-bottom: 12px;">
+    <span style="min-width: 100px; color: #666; font-size: 14px;">现在</span>
+    <span>当前的<strong>状态</strong></span>
+  </div>
+</div>
 
----style=gradient---
+<hr>
 
-## 延伸阅读
+<h2>延伸阅读</h2>
 
-推荐相关内容...
+<p>推荐相关内容...</p>
 
-相关主题：深度阅读、专题探讨
+<p>相关主题：深度阅读、专题探讨</p>
 \`\`\`
 
 ## 注意事项
@@ -500,9 +576,6 @@ function getTemplateLayoutPrompt(templateId: TemplateId): string {
 - 用视觉元素控制阅读节奏
 - 关键段落使用特殊标记
 - 添加延伸阅读推荐
-- 使用毛玻璃和阴影效果
-- 列表使用 - 开头
-- 主题标签用普通文本
 `,
   };
 
@@ -518,24 +591,9 @@ export function getLayoutOptimizationPrompt(
 ): string {
   return `# 布局优化任务
 
-## ⚠️ 关键格式要求（必须遵守）
-
-1. **列表格式**：所有列表（编号列表、流程步骤、时间线等）必须使用 \`-\` 或 \`*\` 开头，**严禁使用** A. B. C. 或 1. 2. 3. 格式
-   - ✅ 正确：\`- 第一点内容\`
-   - ❌ 错误：\`A. 第一点内容\` 或 \`1. 第一点内容\`
-
-2. **标签格式**：文章末尾的标签使用普通文本格式，不要用 \`\`#标签\`\` 格式
-   - ✅ 正确：\`相关标签：人工智能、深度学习\`
-   - ❌ 错误：\`#人工智能 #深度学习\`
-
-3. **组件内Markdown**：布局组件内的内容使用标准Markdown语法
-   - **加粗**：\`\`**文字**\`\`
-   - *斜体*：\`\`*文字*\`\`
-   - \`代码\`：\`\`\`代码\`\`\`
-
 ## 任务说明
 
-请将以下内容优化为结构清晰、视觉美观的公众号文章，使用适当的布局组件。
+请将以下内容优化为结构清晰、视觉美观的公众号文章，使用适当的 HTML 内嵌样式。
 
 ${getLayoutPrompt(templateId, content)}`;
 }
@@ -544,24 +602,24 @@ ${getLayoutPrompt(templateId, content)}`;
  * Get layout quick reference for AI
  */
 export function getLayoutQuickReference(): string {
-  return `# 布局组件快速参考
-
-## 卡片
-:::card variant="default|primary|gradient|shadow|bordered|glass" title="标题"
-内容
-:::
+  return `# HTML 内嵌样式快速参考
 
 ## 信息框
-:::tip|warning|success|error|note|quote
-内容
-:::
+\`<div style="background-color: #f0f9ff; border-left: 4px solid #4a90e2; padding: 15px;">...\div>\`
 
-## 重点区域
-:::numbered|process|timeline|callout|comparison
-内容
-:::
+## 卡片
+\`<div style="border: 1px solid #e8e8e8; border-radius: 8px; padding: 16px;">...</div>\`
 
 ## 分割线
----style=solid|dashed|dotted|gradient---
+\`<hr>\` 或 \`<div style="border-top: 1px dashed #ccc; margin: 20px 0;"></div>\`
+
+## 步骤列表
+\`<div style="display: flex; align-items: baseline;"><span>✅</span> 内容</div>\`
+
+## 时间线
+\`<div style="display: flex; align-items: baseline;"><span style="min-width: 100px;">时间</span><span>事件</span></div>\`
+
+## 对比表格
+\`<table style="width: 100%; border-collapse: collapse;">...</table>\`
 `;
 }

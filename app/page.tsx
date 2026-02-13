@@ -7,7 +7,7 @@ import { useAIConfig } from '@/hooks/useAIConfig';
 import { Editor } from '@/components/Editor';
 import { Preview } from '@/components/Preview';
 import { Toolbar } from '@/components/Toolbar';
-import { parseMarkdownWithLayout } from '@/lib/markdown';
+import { parseMarkdown } from '@/lib/markdown';
 import { generateWechatHtml } from '@/lib/wechatStyle';
 import { countChars } from '@/lib/utils';
 
@@ -42,8 +42,8 @@ export default function Home() {
   const handleExportHtml = async () => {
     if (!article) return;
 
-    // Use layout-aware markdown parsing for WeChat
-    const html = parseMarkdownWithLayout(article.content, settings.primaryColor);
+    // Use basic markdown parsing for WeChat
+    const html = parseMarkdown(article.content);
     const styledHtml = generateWechatHtml(html, settings);
 
     try {
